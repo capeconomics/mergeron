@@ -1,0 +1,4 @@
+#!/bin/bash
+
+uv build --clear --sdist
+twine check dist/*
