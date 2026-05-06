@@ -590,7 +590,7 @@ class PCMSpec:
 
 @YAML.register_class
 @enum.unique
-class HSRFilingTest(int, Enameled):
+class HSRFilingTest(str, Enameled):
     """
     Implementations of the HSR size-of-person test.
 
@@ -600,7 +600,7 @@ class HSRFilingTest(int, Enameled):
 
     """
 
-    NONE = 1
+    NONE = "Unrestricted"
     """A HSR filing is assumed for (the hypothetical transaction in) every draw.
 
     In effect, one assumes that, in every draw, either
@@ -611,7 +611,7 @@ class HSRFilingTest(int, Enameled):
     This is the default.
     """
 
-    SoP_NTH = 2
+    SoP_NTH = "n-th Firm meets lower threshold"
     """
     HSR size-of-person filing test against n-th firm share.
 
@@ -626,7 +626,7 @@ class HSRFilingTest(int, Enameled):
     the HSR size-of-person test.
     """
 
-    SoP_RND = 3
+    SoP_RND = "randomly-drawn test-firm-share meets lower threshold"
     """
     HSR size-of-person filing test against randomly-drawn test shares.
 
@@ -638,7 +638,7 @@ class HSRFilingTest(int, Enameled):
     revenue share, a filing is inferred to be required.
     """
 
-    SoP_TEN = 4
+    SoP_TEN = "smaller merging firm meets lower threshold"
     """
     HSR size-of-person filing test against smaller merging firm's share.
 
@@ -787,14 +787,24 @@ class UPPTestRegime:
         return self.guppi_aggregator
 
 
+@YAML.register_class
+@enum.unique
+class StatsGroup(str, Enameled):
+    """Measure used to summarize investigations data."""
+
+    FC = "ByFirmCount"
+    DL = "ByDelta"
+    HD = "ByHHIandDelta"
+    ZN = "ByConcentrationZone"
+
+
 @frozen
 class UPPTestsCounts:
-    """Counts of markets resolved as specified.
+    """Counts of markets meeting a specified Guidelines standard.
 
-    Resolution may be either :attr:`INVResolution.ENFT`,
-    :attr:`INVResolution.CLRN`, or :attr:`INVResolution.BOTH`.
-    In the case of :attr:`INVResolution.BOTH`, two columns of counts
-    are returned: one for each resolution.
+    The specification includes Guidelines thresholds (:attr:`mergeron.core.MGThresholds`)
+    as well as a test regime (:attr:`UPPTestRegime`).
+    See, :method:`enforcement_counts.compute_enforcement_counts`().
     """
 
     ByFirmCount: ArrayBIGINT = field(

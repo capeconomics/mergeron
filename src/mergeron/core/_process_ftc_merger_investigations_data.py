@@ -21,7 +21,7 @@ from bs4 import BeautifulSoup
 from numpy.testing import assert_array_equal
 
 from .. import ArrayBIGINT
-from .._serialization import _mappingproxy_from_mapping
+from .. import _mappingproxy_from_mapping
 from . import DELTA_HEADER_DICT
 from . import FCOUNT_HEADER_DICT
 from . import FID_WORK_DIR

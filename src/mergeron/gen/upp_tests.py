@@ -113,7 +113,7 @@ def compute_upp_test_counts(
     with parallel_config(
         backend="threading", n_jobs=min(NTHREADS, _iter_count), return_as="generator"
     ):
-        res_list = Parallel()(
+        _res_list = Parallel()(
             delayed(_upp_test_counts)(
                 _divratio_array[
                     (_si := _idx * SUBSAMPLE_SIZE) : (
@@ -139,22 +139,17 @@ def compute_upp_test_counts(
             for _idx in range(_iter_count)
         )
 
-    res_list_stacks = [
-        np.stack([getattr(_j, _k) for _j in res_list])
-        for _k in ("ByFirmCount", "ByDelta", "ByHHIandDelta")
+    _res_list_stacks = [
+        ArrayBIGINT(np.vstack([getattr(_j, _k) for _j in _res_list]))
+        for _k in (f"{StatsGroup.FC}", f"{StatsGroup.DL}", f"{StatsGroup.HD}")
     ]
-    del res_list
+    del _res_list
 
     return UPPTestsCounts(*[
-        (
-            []
-            if not _g.any()
-            else np.hstack((
-                _g[0, :, :_h],
-                np.einsum("ijk->jk", _g[:, :, _h:], dtype=int),
-            ))
+        (ArrayBIGINT([]) if not _g.any() else enforcement_counts(_g, _h))
+        for _g, _h in zip(
+            _res_list_stacks, (StatsGroup.FC, StatsGroup.DL, StatsGroup.HD), strict=True
         )
-        for _g, _h in zip(res_list_stacks, [1, 1, 3], strict=True)
     ])
 
 
@@ -221,50 +216,44 @@ def _upp_test_counts(
 
     # Clearance counts by firm count
     enf_cnts_sim_byfirmcount_array = (
-        EMPTY_ARRAYBIGINT
-        if not _fcounts.size
-        else enforcement_counts(
-            ArrayBIGINT(np.hstack((_fcounts, np.ones_like(_fcounts), upp_test_arrays))),
+        enforcement_counts(
+            ArrayBIGINT(
+                np.hstack((_fcounts, np.ones_like(_fcounts, int), upp_test_arrays))
+            ),
             StatsGroup.FC,
         )
+        if _fcounts.size
+        else EMPTY_ARRAYBIGINT
     )
 
-    # Clearance counts by post-merger HHI and ΔHHI
-    if (not _hhi_post.size) or np.isnan(next(_hhi_post.flat)):
-        hhi_post_ranged = EMPTY_ARRAYBIGINT
-        hhi_delta_ranged = esl.hhi_delta_ranger(_hhi_delta).astype(int)
+    # Clearance counts by ΔHHI
+    enf_cnts_sim_bydelta_array = enforcement_counts(
+        ArrayBIGINT(
+            np.hstack((
+                ArrayBIGINT(esl.hhi_delta_ranger(_hhi_delta)),
+                np.ones_like(_hhi_delta, int),
+                upp_test_arrays,
+            ))
+        ),
+        StatsGroup.DL,
+    )
 
-        enf_cnts_sim_bydelta_array = enforcement_counts(
+    # Clearance counts by post-merger HHI
+    enf_cnts_sim_byhhianddelta_array = (
+        EMPTY_ARRAYBIGINT
+        if (not _hhi_post.size) or np.isnan(next(_hhi_post.flat))
+        else enforcement_counts(
             ArrayBIGINT(
                 np.hstack((
-                    hhi_delta_ranged[:, :],
-                    hhi_delta_ranged,
-                    np.ones_like(hhi_delta_ranged),
+                    ArrayBIGINT(esl.hhi_post_ranger(_hhi_post)),
+                    ArrayBIGINT(esl.hhi_delta_ranger(_hhi_delta)),
+                    np.ones_like(_hhi_post, int),
                     upp_test_arrays,
                 ))
             ),
-            StatsGroup.DL,
+            StatsGroup.HD,
         )
-        enf_cnts_sim_byhhianddelta_array = EMPTY_ARRAYBIGINT
-    else:
-        hhi_post_ranged = esl.hhi_post_ranger(_hhi_post).astype(int)
-        hhi_delta_ranged = esl.hhi_delta_ranger(_hhi_delta).astype(int)
-
-        enf_cnts_sim_byhhianddelta_array_raw = ArrayBIGINT(
-            np.hstack((
-                hhi_post_ranged,
-                hhi_delta_ranged,
-                np.ones_like(hhi_delta_ranged),
-                upp_test_arrays,
-            ))
-        )
-
-        enf_cnts_sim_bydelta_array = enforcement_counts(
-            enf_cnts_sim_byhhianddelta_array_raw, StatsGroup.DL
-        )
-        enf_cnts_sim_byhhianddelta_array = enforcement_counts(
-            enf_cnts_sim_byhhianddelta_array_raw, StatsGroup.HD
-        )
+    )
 
     return UPPTestsCounts(
         ByFirmCount=enf_cnts_sim_byfirmcount_array,

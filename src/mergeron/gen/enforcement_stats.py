@@ -7,14 +7,18 @@ from typing import Literal
 import numpy as np
 from scipy.interpolate import make_interp_spline
 
+from .. import EMPTY_ARRAYBIGINT
 from .. import VERSION
 from .. import YAML
 from .. import ArrayBIGINT
 from .. import ArrayUINT8
 from .. import Enameled
+from ..core import DELTA_HEADER_DICT
+from ..core import HHI_HEADER_DICT
 from ..core import INVData
 from ..core import INVTableData
 from . import INVResolution
+from . import StatsGroup
 
 __version__ = VERSION
 
@@ -53,31 +57,25 @@ class OtherEvidence(str, Enameled):
     UNR = "Unrestricted on additional evidence"
 
 
-@YAML.register_class
-@enum.unique
-class StatsGroup(str, Enameled):
-    """Measure used to summarize investigations data."""
-
-    FC = "ByFirmCount"
-    DL = "ByDelta"
-    HD = "ByHHIandDelta"
-
-
 # Parameters and functions to interpolate selected HHI and ΔHHI values
 #   recorded in fractions to ranges of values in points on the HHI scale
-HHI_POST_KNOTS = np.array([0, 1800, 2000, 2400, 3000, 4000, 5000, 7000, 10001], int)
-HHI_DELTA_KNOTS = np.array([0, 100, 200, 300, 500, 800, 1200, 2500, 5001], int)
+HHI_POST_KNOTS = np.array(
+    [*[_h for _h in HHI_HEADER_DICT.values() if _h < 10001], 10001], int
+)
+HHI_DELTA_KNOTS = np.array(
+    [*[_d for _d in DELTA_HEADER_DICT.values() if _d < 5001], 5001], int
+)
 hhi_post_ranger, hhi_delta_ranger = (
     make_interp_spline(_f / 1e4, _f, k=0) for _f in (HHI_POST_KNOTS, HHI_DELTA_KNOTS)
 )
 
 
-def enforcement_counts_observed_by_tabletype(
+def enforcement_counts_observed(
     _invdata_array_dict: INVData,
     _data_period: str,
     _table_industry_group: IndustryGroup,
     _table_other_evidence: OtherEvidence,
-    _stats_group: Literal[StatsGroup.FC, StatsGroup.HD],
+    _stats_group: Literal[StatsGroup.FC, StatsGroup.DL, StatsGroup.HD],
     _enf_spec: INVResolution,
     /,
 ) -> ArrayBIGINT:
@@ -109,10 +107,9 @@ def enforcement_counts_observed_by_tabletype(
             f"Must be one of, {tuple(_invdata_array_dict.keys())!r}."
         )
 
-    _ndim_in, _table_type = (
-        (1, StatsGroup.FC.value)
-        if _stats_group == StatsGroup.FC
-        else (2, StatsGroup.HD.value)
+    _ndim_in = 2 if _stats_group == StatsGroup.HD else 1
+    _table_type = (
+        _stats_group.value if _stats_group == StatsGroup.FC else StatsGroup.HD.value
     )
 
     _data_array_dict_sub = _invdata_array_dict[_data_period][_table_type]
@@ -133,7 +130,12 @@ def enforcement_counts_observed_by_tabletype(
             stats_kept_indxs = [-1, -3, -2]
 
     _counts_array = ArrayBIGINT(
-        np.hstack([_data_array[:, :_ndim_in], _data_array[:, stats_kept_indxs]])
+        np.hstack([
+            _data_array[:, [1]]
+            if _stats_group == StatsGroup.DL
+            else _data_array[:, :_ndim_in],
+            _data_array[:, stats_kept_indxs],
+        ])
     )
 
     return enforcement_counts(_counts_array, _stats_group)
@@ -192,7 +194,9 @@ def enforcement_counts(
     ArrayBIGINT
         Enforcement counts by range/value of firm count, post-merger HHI, or ΔHHI
     """
-    if _stats_group == StatsGroup.FC:
+    if (not _raw_counts.size) or np.isnan(next(_raw_counts.flat)):
+        return EMPTY_ARRAYBIGINT
+    elif _stats_group == StatsGroup.FC:
         return ArrayBIGINT(
             np.vstack([
                 np.concatenate([
@@ -210,7 +214,7 @@ def enforcement_counts(
                 np.concatenate([
                     (_i,),
                     np.einsum(
-                        "ij->j", _raw_counts[_raw_counts[:, 1] == _i][:, 2:], dtype=int
+                        "ij->j", _raw_counts[_raw_counts[:, 0] == _i][:, 1:], dtype=int
                     ),
                 ])
                 for _i in HHI_DELTA_KNOTS[:-1]
@@ -220,10 +224,10 @@ def enforcement_counts(
         ret_val = ArrayBIGINT(np.zeros((1, _raw_counts.shape[1]), dtype=int))
         # rollup clearance stats by HHI and Delta thresholds
         for _hhi_post_lim in HHI_POST_KNOTS[:-1]:
-            hhi_test_array = _raw_counts[_raw_counts[:, 0] == _hhi_post_lim]
+            _raw_counts_i = _raw_counts[_raw_counts[:, 0] == _hhi_post_lim]
 
             for _delta_lim in HHI_DELTA_KNOTS[:-1]:
-                delta_test_array = hhi_test_array[hhi_test_array[:, 1] == _delta_lim]
+                _raw_counts_ij = _raw_counts_i[_raw_counts_i[:, 1] == _delta_lim]
 
                 ret_val = np.vstack((
                     ret_val,
@@ -231,7 +235,7 @@ def enforcement_counts(
                         [
                             _hhi_post_lim,
                             _delta_lim,
-                            *np.einsum("ij->j", delta_test_array[:, 2:], dtype=int),
+                            *np.einsum("ij->j", _raw_counts_ij[:, 2:], dtype=int),
                         ],
                         dtype=int,
                     ),

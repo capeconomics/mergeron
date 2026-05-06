@@ -59,8 +59,8 @@ from .. import VERSION
 from .. import WORK_DIR as PKG_WORK_DIR
 from .. import YAML
 from .. import ArrayDouble
+from .. import _mappingproxy_from_mapping
 from .. import zipfile
-from .._serialization import _mappingproxy_from_mapping
 from . import MGNDATA_ARCHIVE_PATH
 from . import EmpiricalMarginData
 

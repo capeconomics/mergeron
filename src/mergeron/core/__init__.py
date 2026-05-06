@@ -9,6 +9,7 @@ from typing import Literal
 from typing import TypeAlias
 
 import numpy as np
+from attr import validators
 from attrs import cmp_using
 from attrs import field
 from attrs import frozen
@@ -42,13 +43,17 @@ Used to look up enforcement standards from published Guidelines.
 class MGThresholds:
     """Thresholds for Guidelines standards."""
 
-    delta: float
-    fc: float
-    rec: float
-    guppi: float
-    dr: float
-    cmcr: float
-    ipr: float
+    delta: float = 0.10
+    fc: np.uint8 = field(
+        default=6,  # type: ignore[arg-type]
+        converter=np.ubyte,  # type: ignore[misc]
+        validator=[validators.gt(np.uint8(0)), validators.instance_of(np.uint8)],
+    )
+    rec: float = 0.85
+    guppi: float = 0.065
+    dr: float = 0.15
+    cmcr: float = 0.03
+    ipr: float = 0.05
 
 
 @frozen

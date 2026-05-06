@@ -110,7 +110,7 @@ class GuidelinesStandards:
             "safeharbor",
             MGThresholds(
                 dh_s,
-                _fc := int(np.ceil(1 / hhi_p)),
+                _fc := np.ubyte(np.ceil(1 / hhi_p)),
                 _r := gbfn.round_cust(_fc / (_fc + 1), frac=0.05),
                 _g := guppi_from_delta(dh_s, m_star=1.0, r_bar=_r),
                 _dr := 1 - _r,

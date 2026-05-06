@@ -28,6 +28,7 @@ from .. import NTHREADS
 from .. import PKG_NAME
 from .. import VERSION
 from .. import YAML
+from .. import ArrayBIGINT
 from .. import ArrayBoolean
 from .. import ArrayDouble
 from .. import RECForm
@@ -49,6 +50,8 @@ from . import UPPTestRegime
 from . import UPPTestsCounts
 from .data_generation_functions import market_share_sampler
 from .data_generation_functions import prices_sampler
+from .enforcement_stats import StatsGroup
+from .enforcement_stats import enforcement_counts
 from .upp_tests import compute_upp_test_counts
 
 __version__ = VERSION
@@ -863,20 +866,15 @@ def _sim_enf_cnts_ll(
         )
 
     _res_list_stacks = [
-        np.stack([getattr(_j, _k) for _j in _res_list])
-        for _k in ("ByFirmCount", "ByDelta", "ByHHIandDelta")
+        ArrayBIGINT(np.vstack([getattr(_j, _k) for _j in _res_list]))
+        for _k in (f"{StatsGroup.FC}", f"{StatsGroup.DL}", f"{StatsGroup.HD}")
     ]
 
     return UPPTestsCounts(*[
-        (
-            []
-            if not _g.any()
-            else np.hstack((
-                _g[0, :, :_h],
-                np.einsum("ijk->jk", _g[:, :, _h:], dtype=int),
-            ))
+        (ArrayBIGINT([]) if not _g.any() else enforcement_counts(_g, _h))
+        for _g, _h in zip(
+            _res_list_stacks, (StatsGroup.FC, StatsGroup.DL, StatsGroup.HD), strict=True
         )
-        for _g, _h in zip(_res_list_stacks, [1, 1, 3], strict=True)
     ])
 
 
