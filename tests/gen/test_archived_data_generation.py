@@ -359,7 +359,7 @@ def test_markets_sampler(
     # Roundtrip the market sample, no data, through YAML serialization
     # This just gives us a "bare" MarketSample object, i.e., without data, for testing
     with io.StringIO() as _yb:
-        _cmsy = YAML.dump(market_sample, _yb)
+        _ = YAML.dump(market_sample, _yb)
         _cms = YAML.load(_yb.getvalue())
 
     # Rebuild a bare MarketSample object from the deserialized YAML
@@ -375,11 +375,11 @@ def test_markets_sampler(
         raise AssertionError
 
     if _cec != market_sample_bench.enforcement_counts:
-        for _f in ("ByFirmCount", "ByDelta"):
+        for _f in ("ByFirmCount", "ByDelta", "ByHHIandDelta"):
             print(f'Enforcement counts, "{_f}" differ between test and generated data.')
             print(getattr(_cec, _f))
             print(getattr(market_sample_bench.enforcement_counts, _f))
-            raise AssertionError
+        raise AssertionError
 
     del market_sample
     gc.collect()

@@ -35,11 +35,7 @@ ENFT_THRESHOLDS = GuidelinesStandards(2023).presumption
 ENFT_REGIME = UPPTestRegime(INVResolution.ENFT, UPPAggregator.AVG, UPPAggregator.AVG)
 
 
-SAMPLE_SPEC_AUX = {
-    "hmt_flag": HMTSpec(0, 0.05, 0.5, True),
-    "sample_size": 10**4,
-    "nthreads": 8,
-}
+SAMPLE_SPEC_AUX = {"sample_size": 10**4, "nthreads": 8}
 
 specs_path = (Path(__file__).parents[1] / "data").joinpath(
     "test_upp_tests_hmt_archived_specs_concentrating_firm_counts.zip"
@@ -63,9 +59,7 @@ bench_set_choice = tuple(
 
 
 @pytest.mark.parametrize("_spec", bench_set_choice)
-def test_upp_tests_counts(
-    _spec: tuple[float, PCMDistribution, PCMRestriction, PriceSpec, HSRFilingTest],
-) -> None:
+def test_upp_tests_counts(_spec: tuple[float, str, str, str, str]) -> None:
     """Test enforcement counts with sample restricted by HMT."""
     print(_spec)
     _archive_name = "upp_test_data_hmt_-{}-{}.zip".format(
@@ -93,9 +87,12 @@ def test_upp_tests_counts(
         price_spec=_price_spec,
         hsr_filing_test_type=_hsr_filing_test,
         seed_data=seed_sequencer(len(SeedSequenceData.__attrs_attrs__)),
+        hmt_flag=HMTSpec(0, 0.05, 0.5, True),
         **SAMPLE_SPEC_AUX,
     )
     market_sample.generate_sample()
+    if market_sample.dataset is None:
+        raise AssertionError("No dataset generated.")
 
     _share_array = market_sample.dataset.share_array
     _aggr_purch_prob = market_sample.dataset.aggregate_purchase_probability
@@ -196,7 +193,7 @@ def test_upp_tests_counts(
         with (_zpath / "mergeron_market_sample_enf_counts.yaml").open("r") as _yfh:
             _upp_test_counts_bechmark = YAML.load(_yfh)
 
-    if not all((
+    if market_sample.enforcement_counts and not all((
         np.array_equal(
             market_sample.enforcement_counts.ByFirmCount,
             _upp_test_counts_bechmark.ByFirmCount,
@@ -212,12 +209,14 @@ def test_upp_tests_counts(
         for _s in _spec:
             print(_s)
         print("Test values:")
-        print("ByFirmCount:", market_sample.enforcement_counts.ByFirmCount)
-        print("ByDelta:", market_sample.enforcement_counts.ByDelta[::-1])
+        print("ByFirmCount:", repr(market_sample.enforcement_counts.ByFirmCount))
+        print("ByDelta:", repr(market_sample.enforcement_counts.ByDelta[::-1]))
+        print("ByHHIandDelta:", repr(market_sample.enforcement_counts.ByHHIandDelta))
 
         print()
         print("Benchmark values:")
-        print("ByFirmCount:", _upp_test_counts_bechmark.ByFirmCount)
-        print("ByDelta:", _upp_test_counts_bechmark.ByDelta[::-1])
+        print("ByFirmCount:", repr(_upp_test_counts_bechmark.ByFirmCount))
+        print("ByDelta:", repr(_upp_test_counts_bechmark.ByDelta[::-1]))
+        print("ByHHIandDelta:", repr(_upp_test_counts_bechmark.ByHHIandDelta))
 
         raise AssertionError("Enforcement counts differ")

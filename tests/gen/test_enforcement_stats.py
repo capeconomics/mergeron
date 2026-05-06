@@ -9,7 +9,7 @@ from mergeron.gen import INVResolution
 from mergeron.gen.enforcement_stats import IndustryGroup
 from mergeron.gen.enforcement_stats import OtherEvidence
 from mergeron.gen.enforcement_stats import StatsGroup
-from mergeron.gen.enforcement_stats import enforcement_counts_observed_by_tabletype
+from mergeron.gen.enforcement_stats import enforcement_counts_observed
 
 invdata_array_dict = fid.construct_data(
     INVDATA_ARCHIVE_PATH,
@@ -27,7 +27,7 @@ invdata_array_dict = fid.construct_data(
 def test_enf_stats(_stats_group: StatsGroup, _test_val: ArrayBIGINT) -> None:
     """Test enforcement counts by group."""
     enf_spec_ = INVResolution.CLRN
-    enf_cnts_ = enforcement_counts_observed_by_tabletype(
+    enf_cnts_ = enforcement_counts_observed(
         invdata_array_dict,
         "1996-2003",
         IndustryGroup.ALL,

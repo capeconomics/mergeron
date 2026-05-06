@@ -5,7 +5,6 @@ from __future__ import annotations
 import decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
-from typing import Any
 
 import mpmath  # type: ignore
 import numpy as np
@@ -27,20 +26,18 @@ from mergeron.gen import ShareSpec
 from mergeron.gen import SHRDistribution
 
 if TYPE_CHECKING:
+    from mergeron import MPFloat
+    from mergeron import MPMatrix
     from mergeron.core import MGThresholds
-
-
-@pytest.fixture(scope="session")
-def yaml_file_path(request: Any, tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Create a path to the test workbook, for writing to and reading from it.
-
-    See, https://docs.pytest.org/en/7.1.x/how-to/tmp_path.html
-    """
-    return tmp_path_factory.mktemp("test_yaml")
-
 
 if not (_w := Path.home() / PKG_NAME) == WORK_DIR:
     raise ValueError(f"WORK_DIR expected to be {_w} but is {WORK_DIR}")
+
+
+@pytest.fixture(scope="function")
+def yaml_file_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Create a path to the test folder, for writing to and reading from it."""
+    return tmp_path_factory.mktemp("test_yaml") / "test_class_persistence.yaml"
 
 
 @pytest.mark.parametrize(
@@ -72,16 +69,19 @@ def test_object_persistence(
     | gbl.GuidelinesStandards
     | ShareSpec
     | SeedSequenceData
-    | dgm.MarketSample,
+    | dgm.MarketSample
+    | MPFloat
+    | MPMatrix
+    | list[list[decimal.Decimal]],
     yaml_file_path: Path,
 ) -> None:
     """Test yaml serialization and deserialization of various objects."""
-    test_path = yaml_file_path / "test_class_persistence.yaml"
+    test_path = yaml_file_path
 
     print("The present instance is:")
     print(repr(_test_instance))
 
-    YAML.dump(_test_instance, test_path)
+    YAML.dump(_test_instance, stream=test_path)
     try:
         test_instance_from_yaml = YAML.load(test_path)
     except NameError:
@@ -96,5 +96,3 @@ def test_object_persistence(
         raise AssertionError(
             "Instances are not equal: {_test_instance_from_yaml!r}\n!=\n{_test_instance!r}"
         )
-
-    # _test_path.unlink()

@@ -8,6 +8,7 @@ import pytest
 from numpy.testing import assert_allclose
 
 from mergeron import YAML
+from mergeron import ArrayDouble
 from mergeron import RECForm
 from mergeron import UPPAggregator
 from mergeron import zipfile
@@ -34,7 +35,7 @@ ENFT_THRESHOLDS = GuidelinesStandards(2023).presumption
 ENFT_REGIME = UPPTestRegime(INVResolution.ENFT, UPPAggregator.AVG, UPPAggregator.AVG)
 
 
-SAMPLE_SPEC_AUX = {"hmt_flag": False, "sample_size": 10**4, "nthreads": 8}
+SAMPLE_SPEC_AUX = {"sample_size": 10**4, "nthreads": 8}
 
 bench_set = tuple(
     _s
@@ -56,20 +57,11 @@ bench_set_choice = tuple(
 
 
 @pytest.mark.parametrize("_spec", bench_set_choice)
-def test_upp_tests_counts(
-    _spec: tuple[
-        float,
-        SHRDistribution,
-        PCMDistribution,
-        PCMRestriction,
-        PriceSpec,
-        HSRFilingTest,
-    ],
-) -> None:
+def test_upp_tests_counts(_spec: tuple[float, str, str, str, str, str]) -> None:
     """Test enforcement counts with sample restricted by HMT."""
     print(_spec)
     _archive_name = "upp_test_data_nohmt_-{}-{}.zip".format(
-        f"{float(_spec[0]) * 100:1.0f}PCT", "-".join(_spec[1:])
+        f"{float(_spec[0]) * 100:1.0f}PCT", _spec[1:]
     )
 
     (
@@ -102,9 +94,13 @@ def test_upp_tests_counts(
         price_spec=_price_spec,
         hsr_filing_test_type=_hsr_filing_test,
         seed_data=seed_sequencer(len(SeedSequenceData.__attrs_attrs__)),
+        hmt_flag=False,
         **SAMPLE_SPEC_AUX,
     )
     market_sample.generate_sample()
+
+    if market_sample.dataset is None:
+        raise ValueError("Failed to generate market sample.")
 
     _share_array = market_sample.dataset.share_array
     _aggr_purch_prob = market_sample.dataset.aggregate_purchase_probability
@@ -119,7 +115,7 @@ def test_upp_tests_counts(
         )
 
     # Test diversion ratios, as ordinals
-    _frmshr_array = _share_array[:, :2]
+    _frmshr_array = ArrayDouble(_share_array[:, :2])
     _diversion_array = compute_merging_firm_diversion_ratios(
         market_sample.share_spec.recapture_form,
         market_sample.share_spec.recapture_rate,
@@ -236,7 +232,7 @@ def test_upp_tests_counts(
         with (_zpath / "mergeron_market_sample_enf_counts.yaml").open("r") as _yfh:
             _upp_test_counts_bechmark = YAML.load(_yfh)
 
-    if not all((
+    if market_sample.enforcement_counts and not all((
         np.array_equal(
             market_sample.enforcement_counts.ByFirmCount,
             _upp_test_counts_bechmark.ByFirmCount,
@@ -253,11 +249,13 @@ def test_upp_tests_counts(
             print(_s)
         print("Test values:")
         print("ByFirmCount:", repr(market_sample.enforcement_counts.ByFirmCount))
-        print("ByDelta:", market_sample.enforcement_counts.ByDelta[::-1])
+        print("ByDelta:", repr(market_sample.enforcement_counts.ByDelta[::-1]))
+        print("ByHHIandDelta:", repr(market_sample.enforcement_counts.ByHHIandDelta))
 
         print()
         print("Benchmark values:")
         print("ByFirmCount:", repr(_upp_test_counts_bechmark.ByFirmCount))
-        print("ByDelta:", _upp_test_counts_bechmark.ByDelta[::-1])
+        print("ByDelta:", repr(_upp_test_counts_bechmark.ByDelta[::-1]))
+        print("ByHHIandDelta:", repr(_upp_test_counts_bechmark.ByHHIandDelta))
 
         raise AssertionError("Enforcement counts differ")
