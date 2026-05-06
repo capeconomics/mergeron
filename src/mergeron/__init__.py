@@ -5,19 +5,22 @@ from __future__ import annotations
 import enum
 import os
 import sys
+from collections.abc import Mapping
 from collections.abc import Sequence
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import TypeAlias
 
-import mpmath
 import numpy as np
+from mpmath import ctx_mp_python
+from mpmath.matrices import matrices
 
-from . import _serialization
-
-YAML = _serialization.YAML
-yaml_rt_mapper = _serialization.yaml_rt_mapper
-yamlize_attrs = _serialization.yamlize_attrs
+from ._serialization import YAML as YAML
+from ._serialization import Enameled as Enameled
+from ._serialization import yaml_rt_mapper as yaml_rt_mapper
+from ._serialization import yamlize_attrs as yamlize_attrs
 
 if sys.version_info >= (3, 14):
     import zipfile as zipfile_conditional
@@ -58,33 +61,10 @@ MERGERON_DEFAULT_REC to a value between 0 and 1.
 
 NTHREADS = int(os.getenv("MERGERON_NTHREADS", "32"))
 
-type MPFloat = mpmath.mpf
-type MPMatrix = mpmath.matrix
+MPFloat: TypeAlias = ctx_mp_python._mpf
+MPMatrix: TypeAlias = matrices._matrix
 
 np.set_printoptions(precision=28, floatmode="fixed", legacy=False)
-
-
-# Yamelized Enum
-@YAML.register_class
-class Enameled(enum.Enum):
-    """Add YAML representer, constructor for enum.Enum."""
-
-    @classmethod
-    def to_yaml(
-        cls, _r: yaml.representer.RoundTripRepresenter, _d: enum.Enum
-    ) -> yaml.ScalarNode:
-        """Serialize enumerations by .name, not .value."""
-        return _r.represent_scalar(
-            f"!{super().__getattribute__(cls, '__name__')}", f"{_d.name}"
-        )
-
-    @classmethod
-    def from_yaml(
-        cls, _c: yaml.constructor.RoundTripConstructor, _n: yaml.ScalarNode
-    ) -> enum.EnumType:
-        """Deserialize enumeration serialized by .name."""
-        retval: enum.EnumMeta = super().__getattribute__(cls, _n.value)
-        return retval
 
 
 @YAML.register_class
@@ -164,12 +144,13 @@ class TypedNDArray(np.ndarray):
         _arr: Sequence[
             bool | float | int | MPFloat | Sequence[bool | float | int | MPFloat]
         ]
-        | np.ndarray,
+        | NDArray[np.bool | np.floating | np.integer | np.uint8]
+        | MPMatrix,
         _type: bool
         | float
         | int
         | MPFloat
-        | np.bool_
+        | np.bool
         | np.floating
         | np.integer
         | np.uint8,
@@ -180,18 +161,22 @@ class TypedNDArray(np.ndarray):
         if not hasattr(_arr, "__len__") or isinstance(_arr, str):
             raise ValueError(f"Invalid first argument, {_arr!r}")
 
-        _type = _type or type(np.ravel(_arr)[0])
-
-        _dtype = object if _type == mpmath.mpf else _type
+        if _type in {np.floating, np.integer}:
+            _dtype = type(np.ravel(_arr)[0])
+        elif isinstance(_arr, MPMatrix):  # type: ignore[misc]
+            _dtype = object
+            _arr = _arr.tolist()
+        elif _type is MPFloat:
+            _dtype = object
+        else:
+            _dtype = _type
 
         if not len(np.ravel(_arr)):
             _arr = np.array([], dtype=_dtype)  # type: ignore[arg-type]
         elif (
-            isinstance(np.ravel(_arr)[0], Sequence | np.ndarray)
-            and isinstance(np.ravel(_arr)[0], mpmath.ctx_mp_python.mpf)
-            and not (
-                isinstance(_type, mpmath.mpf) or np.issubdtype(_dtype, np.floating)  # type: ignore[arg-type]
-            )
+            isinstance(_arr[0], Sequence | np.ndarray)
+            and isinstance(np.ravel(_arr)[0], MPFloat)  # type: ignore[misc]
+            and not ((_dtype is object) or np.issubdtype(_dtype, np.floating))  # type: ignore[arg-type]
         ):
             raise ValueError(
                 "Array of MPFloat objects can only be converted to "
@@ -309,3 +294,27 @@ EMPTY_ARRAYBIGINT = ArrayBIGINT(np.array([], int))
 EMPTY_ARRAYBOOLEAN = ArrayBoolean(np.array([], bool))
 EMPTY_ARRAYDOUBLE = ArrayDouble(np.array([], float))
 EMPTY_ARRAYUINT8 = ArrayUINT8(np.array([], np.uint8))
+
+
+# some functions useful for transforming python data structures
+def invert_map(_dict: Mapping[Any, Any]) -> Mapping[Any, Any]:
+    """Invert mapping, mapping values to keys of the original mapping."""
+    return {_v: _k for _k, _v in _dict.items()}
+
+
+def _dict_from_mapping(_p: Mapping[Any, Any], /) -> dict[Any, Any]:
+    retval: dict[Any, Any] = {}
+    for _k, _v in _p.items():
+        retval |= {_k: _dict_from_mapping(_v)} if isinstance(_v, Mapping) else {_k: _v}
+    return retval
+
+
+def _mappingproxy_from_mapping(_p: Mapping[Any, Any], /) -> MappingProxyType[Any, Any]:
+    retval: dict[Any, Any] = {}
+    for _k, _v in _p.items():
+        retval |= (
+            {_k: _mappingproxy_from_mapping(_v)}
+            if isinstance(_v, Mapping)
+            else {_k: _v}
+        )
+    return MappingProxyType(retval)
