@@ -263,33 +263,33 @@ def test_markets_sampler(
 
     market_sample.generate_sample()
 
-    _share_array = market_sample.dataset.share_array
-    _aggr_purch_prob = market_sample.dataset.aggregate_purchase_probability
+    _market_shares = market_sample.dataset.shares
+    _aggr_purch_prob = market_sample.dataset.aggregate_choice_probability
 
     # Test market shares
-    if len(_share_array) != _sample_size:
+    if len(_market_shares) != _sample_size:
         for _s in _test_spec:
             print(_s)
-        print(len(_share_array), "=?", _sample_size)
+        print(len(_market_shares), "=?", _sample_size)
         raise AssertionError(
             "Generated share array does not match specified sample size in length."
         )
 
     # Test diversion ratios
-    _frmshr_array = _share_array[:, :2]
+    _mrgng_firm_shares = _market_shares[:, :2]
     _diversion_array = compute_merging_firm_diversion_ratios(
         market_sample.share_spec.recapture_form,
         market_sample.share_spec.recapture_rate,
-        _frmshr_array,
+        _mrgng_firm_shares,
         _aggr_purch_prob,
     )
 
     divr_assert_test = (
-        (np.round(np.einsum("ij->i", _frmshr_array), 15) == 1)
-        | (np.argmin(_frmshr_array, axis=1) == np.argmax(_diversion_array, axis=1))
+        (np.round(np.einsum("ij->i", _mrgng_firm_shares), 15) == 1)
+        | (np.argmin(_mrgng_firm_shares, axis=1) == np.argmax(_diversion_array, axis=1))
     )[:, None]
     if not all(divr_assert_test):
-        print(_frmshr_array, _diversion_array)
+        print(_mrgng_firm_shares, _diversion_array)
         raise ValueError(
             "{} {} {} {}".format(
                 "Data construction fails tests:",
@@ -300,31 +300,31 @@ def test_markets_sampler(
         )
 
     if market_sample.share_spec.recapture_form != RECForm.FIXED:
-        _purchase_prob_array = np.einsum("ij,ij->ij", _aggr_purch_prob, _share_array)
+        _choice_probabilities = np.einsum("ij,ij->ij", _aggr_purch_prob, _market_shares)
 
     if market_sample.share_spec.distribution.name != "UNI":
         try:
-            assert_allclose(np.einsum("ij->", _share_array), float(_sample_size))
+            assert_allclose(np.einsum("ij->", _market_shares), float(_sample_size))
         except AssertionError as _err:
-            print(np.einsum("ij->", _share_array), "=?", _sample_size)
+            print(np.einsum("ij->", _market_shares), "=?", _sample_size)
             raise _err
 
         # Test aggregate purchase probability
         assert_allclose(
-            np.einsum("ij->i", _purchase_prob_array)[:, None], _aggr_purch_prob
+            np.einsum("ij->i", _choice_probabilities)[:, None], _aggr_purch_prob
         )
 
         # Test diversion ratios
         _prod_idx = 0
 
         divratio_1j = np.divide(
-            _purchase_prob_array, 1 - _purchase_prob_array[:, [_prod_idx]]
+            _choice_probabilities, 1 - _choice_probabilities[:, [_prod_idx]]
         )
         divratio_1j[:, _prod_idx] = 0
 
         assert_allclose(
             np.einsum("ij->i", divratio_1j)[:, None]
-            + np.divide(1 - _aggr_purch_prob, 1 - _purchase_prob_array[:, [_prod_idx]]),
+            + np.divide(1 - _aggr_purch_prob, 1 - _choice_probabilities[:, [_prod_idx]]),
             np.ones_like(_aggr_purch_prob),
         )
 

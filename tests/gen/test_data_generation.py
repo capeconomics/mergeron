@@ -356,11 +356,11 @@ def test_markets_sampler(
         market_sample.generate_sample()
 
     _data_to_test = market_sample.dataset
-    _share_array = _data_to_test.share_array
-    _fcounts_test = np.einsum("ij->i", _share_array > 0, dtype="<u8")[:, None]
+    _market_shares = _data_to_test.shares
+    _fcounts_test = np.einsum("ij->i", _market_shares > 0, dtype="<u8")[:, None]
 
     # Test market share array
-    if not len(_share_array) == _tcount:
+    if not len(_market_shares) == _tcount:
         raise AssertionError(
             "DATA GENERATION ERROR: {} {}".format(
                 "Generation of sample shares is inconsistent:",
@@ -369,8 +369,8 @@ def test_markets_sampler(
         )
 
     if "DIR" in share_distribution.name:
-        if (_iss := np.round(np.einsum("ij->", _share_array))) != _tcount:
-            print(_iss, _tcount, len(_share_array))
+        if (_iss := np.round(np.einsum("ij->", _market_shares))) != _tcount:
+            print(_iss, _tcount, len(_market_shares))
             raise AssertionError(
                 "DATA GENERATION ERROR: {} {} {}".format(
                     "Generation of sample shares is inconsistent:",
@@ -427,21 +427,21 @@ def test_markets_sampler(
                 )
             )
 
-    _aggr_purch_prob = market_sample.dataset.aggregate_purchase_probability
+    _aggr_purch_prob = market_sample.dataset.aggregate_choice_probability
     # Test diversion ratios
-    _frmshr_array = _share_array[:, :2]
+    _mrgng_firm_shares = _market_shares[:, :2]
     _diversion_ratios = compute_merging_firm_diversion_ratios(
         market_sample.share_spec.recapture_form,
         market_sample.share_spec.recapture_rate,
-        _frmshr_array,
+        _mrgng_firm_shares,
         _aggr_purch_prob,
     )
     divr_assert_test = (
-        (np.round(np.einsum("ij->i", _frmshr_array), 15) == 1)
-        | (np.argmin(_frmshr_array, axis=1) == np.argmax(_diversion_ratios, axis=1))
+        (np.round(np.einsum("ij->i", _mrgng_firm_shares), 15) == 1)
+        | (np.argmin(_mrgng_firm_shares, axis=1) == np.argmax(_diversion_ratios, axis=1))
     )[:, None]
     if not all(divr_assert_test):
-        print(_frmshr_array, _diversion_ratios)
+        print(_mrgng_firm_shares, _diversion_ratios)
         raise ValueError(
             "{} {} {} {}".format(
                 "Data construction fails tests:",
@@ -454,7 +454,7 @@ def test_markets_sampler(
     _diversion_ratios_allfirm = compute_all_firm_diversion_ratios(
         market_sample.share_spec.recapture_form,
         market_sample.share_spec.recapture_rate,
-        _share_array,
+        _market_shares,
         _aggr_purch_prob,
     )
     if not np.allclose(_diversion_ratios, _diversion_ratios_allfirm[:, [1, 0], [0, 1]]):
@@ -472,10 +472,10 @@ def test_markets_sampler(
         market_sample.share_spec.recapture_form != RECForm.FIXED
         and market_sample.share_spec.distribution != SHRDistribution.UNI
     ):
-        _purchase_prob_array = np.einsum("ij,ij->ij", _aggr_purch_prob, _share_array)
+        _choice_probabilities = np.einsum("ij,ij->ij", _aggr_purch_prob, _market_shares)
         try:
             np.testing.assert_array_almost_equal(
-                _purchase_prob_array.sum(axis=1, keepdims=True), _aggr_purch_prob
+                _choice_probabilities.sum(axis=1, keepdims=True), _aggr_purch_prob
             )
         except AssertionError as _e:
             raise ValueError(
@@ -487,18 +487,18 @@ def test_markets_sampler(
         if share_distribution != SHRDistribution.UNI:
             assert_allclose(
                 np.einsum("ijk->ik", _diversion_ratios_allfirm)
-                + (1 - _aggr_purch_prob) / (1 - _purchase_prob_array),
+                + (1 - _aggr_purch_prob) / (1 - _choice_probabilities),
                 1.0,
             )
 
     # Test HHI
-    _nth_firm_share = np.take_along_axis(_share_array, _fcounts_test - 1, axis=1)
-    _hhi_delta = np.einsum("ij,ij->i", _frmshr_array, _frmshr_array[:, ::-1])[:, None]
-    _hhi_post = _hhi_delta + np.einsum("ij,ij->i", _share_array, _share_array)[:, None]
+    _nth_firm_share = np.take_along_axis(_market_shares, _fcounts_test - 1, axis=1)
+    _hhi_delta = np.einsum("ij,ij->i", _mrgng_firm_shares, _mrgng_firm_shares[:, ::-1])[:, None]
+    _hhi_post = _hhi_delta + np.einsum("ij,ij->i", _market_shares, _market_shares)[:, None]
 
     if _data_to_test is not None:
         array_to_test = np.array(
-            [_share_array[:, :2].mean(), _diversion_ratios.mean(), _hhi_delta.mean()]
+            [_market_shares[:, :2].mean(), _diversion_ratios.mean(), _hhi_delta.mean()]
             + (
                 []
                 if share_distribution == SHRDistribution.UNI

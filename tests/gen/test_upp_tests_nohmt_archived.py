@@ -102,32 +102,32 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str, str]) -> None:
     if market_sample.dataset is None:
         raise ValueError("Failed to generate market sample.")
 
-    _share_array = market_sample.dataset.share_array
-    _aggr_purch_prob = market_sample.dataset.aggregate_purchase_probability
+    _market_shares = market_sample.dataset.shares
+    _aggr_purch_prob = market_sample.dataset.aggregate_choice_probability
 
     # Test market shares
-    if len(_share_array) != SAMPLE_SPEC_AUX["sample_size"]:
+    if len(_market_shares) != SAMPLE_SPEC_AUX["sample_size"]:
         for _s in _spec:
             print(_s)
-        print(len(_share_array), "=?", SAMPLE_SPEC_AUX["sample_size"])
+        print(len(_market_shares), "=?", SAMPLE_SPEC_AUX["sample_size"])
         raise AssertionError(
             "Generated share array does not match specified sample size in length."
         )
 
     # Test diversion ratios, as ordinals
-    _frmshr_array = ArrayDouble(_share_array[:, :2])
+    _mrgng_firm_shares = ArrayDouble(_market_shares[:, :2])
     _diversion_array = compute_merging_firm_diversion_ratios(
         market_sample.share_spec.recapture_form,
         market_sample.share_spec.recapture_rate,
-        _frmshr_array,
+        _mrgng_firm_shares,
         _aggr_purch_prob,
     )
     divr_assert_test = (
-        (np.round(np.einsum("ij->i", _frmshr_array), 15) == 1)
-        | (np.argmin(_frmshr_array, axis=1) == np.argmax(_diversion_array, axis=1))
+        (np.round(np.einsum("ij->i", _mrgng_firm_shares), 15) == 1)
+        | (np.argmin(_mrgng_firm_shares, axis=1) == np.argmax(_diversion_array, axis=1))
     )[:, None]
     if not all(divr_assert_test):
-        print(_frmshr_array, _diversion_array)
+        print(_mrgng_firm_shares, _diversion_array)
         raise ValueError(
             "{} {} {} {}".format(
                 "Data construction fails tests:",
@@ -136,37 +136,37 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str, str]) -> None:
                 "unless frmshr_array sums to 1.00.",
             )
         )
-    del _frmshr_array, _diversion_array, divr_assert_test
+    del _mrgng_firm_shares, _diversion_array, divr_assert_test
 
     if _share_distribution.name != "UNI":
         try:
             assert_allclose(
-                np.einsum("ij->", _share_array), float(SAMPLE_SPEC_AUX["sample_size"])
+                np.einsum("ij->", _market_shares), float(SAMPLE_SPEC_AUX["sample_size"])
             )
         except AssertionError as _err:
-            print(np.einsum("ij->", _share_array), "=?", SAMPLE_SPEC_AUX["sample_size"])
+            print(np.einsum("ij->", _market_shares), "=?", SAMPLE_SPEC_AUX["sample_size"])
             raise _err
 
         # Test aggregate purchase probability
-        _purchase_prob_array = np.einsum("ij,ij->ij", _aggr_purch_prob, _share_array)
+        _choice_probabilities = np.einsum("ij,ij->ij", _aggr_purch_prob, _market_shares)
         assert_allclose(
-            np.einsum("ij->i", _purchase_prob_array)[:, None], _aggr_purch_prob
+            np.einsum("ij->i", _choice_probabilities)[:, None], _aggr_purch_prob
         )
 
         # Test diversion ratios, in the cardinal
         _prod_idx = 0
 
         divratio_1j = np.divide(
-            _purchase_prob_array, 1 - _purchase_prob_array[:, [_prod_idx]]
+            _choice_probabilities, 1 - _choice_probabilities[:, [_prod_idx]]
         )
         divratio_1j[:, _prod_idx] = 0
 
         assert_allclose(
             np.einsum("ij->i", divratio_1j)[:, None]
-            + np.divide(1 - _aggr_purch_prob, 1 - _purchase_prob_array[:, [_prod_idx]]),
+            + np.divide(1 - _aggr_purch_prob, 1 - _choice_probabilities[:, [_prod_idx]]),
             np.ones_like(_aggr_purch_prob),
         )
-        del divratio_1j, _prod_idx, _purchase_prob_array
+        del divratio_1j, _prod_idx, _choice_probabilities
 
         # Test firm counts
         if not (
@@ -182,7 +182,7 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str, str]) -> None:
                 )
             )
         ):
-            _fcounts = np.einsum("ij->i", _share_array > 0, dtype="<u1")[:, None]
+            _fcounts = np.einsum("ij->i", _market_shares > 0, dtype="<u1")[:, None]
             _fcounts_vals, _fcounts_counts = np.unique(_fcounts, return_counts=True)
             # Test firm counts against expected firm-count values
             if not np.array_equal(
@@ -206,7 +206,7 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str, str]) -> None:
                 )
                 raise AssertionError("Firm count calculation failed.")
             del _fcounts, _fcounts_vals, _fcounts_counts
-    del _share_array, _aggr_purch_prob
+    del _market_shares, _aggr_purch_prob
 
     market_sample.compute_enforcement_counts(ENFT_THRESHOLDS, ENFT_REGIME)
 

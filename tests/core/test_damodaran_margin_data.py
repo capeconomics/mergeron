@@ -25,7 +25,7 @@ from mergeron.gen.data_generation_functions import _margin_resampler
 from mergeron.gen.data_generation_functions import (
     _margin_resampler_multimodal_multithreaded,
 )
-from mergeron.gen.data_generation_functions import _simple_resampler
+from mergeron.gen.data_generation_functions import _multimodal_resampler
 
 NTHREADS = 8
 QTILES = [
@@ -110,7 +110,7 @@ def test_parallel_data_generation_1(sample_0) -> None:
 
     sample_0p = np.vstack(
         Parallel(backend="threading", n_jobs=min(NTHREADS, _iter_count))(
-            delayed(_simple_resampler)(
+            delayed(_multimodal_resampler)(
                 _margin_data_vector,
                 _margin_data_bandwidth,
                 (
