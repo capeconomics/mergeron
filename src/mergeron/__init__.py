@@ -174,7 +174,8 @@ class TypedNDArray(np.ndarray):
         if not len(np.ravel(_arr)):
             _arr = np.array([], dtype=_dtype)  # type: ignore[arg-type]
         elif (
-            isinstance(_arr[0], Sequence | np.ndarray)
+            np.asarray(_arr).shape
+            and isinstance(_arr[0], Sequence | np.ndarray)
             and isinstance(np.ravel(_arr)[0], MPFloat)  # type: ignore[misc]
             and not ((_dtype is object) or np.issubdtype(_dtype, np.floating))  # type: ignore[arg-type]
         ):

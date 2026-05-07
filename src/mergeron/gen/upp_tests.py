@@ -26,7 +26,7 @@ from . import UPPTestsCounts
 from . import enforcement_stats as esl
 from .data_generation_functions import compute_merging_firm_diversion_ratios
 from .enforcement_stats import StatsGroup
-from .enforcement_stats import enforcement_counts
+from .enforcement_stats import compute_enforcement_counts
 
 __version__ = VERSION
 
@@ -146,7 +146,7 @@ def compute_upp_test_counts(
     del _res_list
 
     return UPPTestsCounts(*[
-        (ArrayBIGINT([]) if not _g.any() else enforcement_counts(_g, _h))
+        (ArrayBIGINT([]) if not _g.any() else compute_enforcement_counts(_g, _h))
         for _g, _h in zip(
             _res_list_stacks, (StatsGroup.FC, StatsGroup.DL, StatsGroup.HD), strict=True
         )
@@ -216,7 +216,7 @@ def _upp_test_counts(
 
     # Clearance counts by firm count
     enf_cnts_sim_byfirmcount_array = (
-        enforcement_counts(
+        compute_enforcement_counts(
             ArrayBIGINT(
                 np.hstack((_fcounts, np.ones_like(_fcounts, int), upp_test_arrays))
             ),
@@ -227,7 +227,7 @@ def _upp_test_counts(
     )
 
     # Clearance counts by ΔHHI
-    enf_cnts_sim_bydelta_array = enforcement_counts(
+    enf_cnts_sim_bydelta_array = compute_enforcement_counts(
         ArrayBIGINT(
             np.hstack((
                 ArrayBIGINT(esl.hhi_delta_ranger(_hhi_delta)),
@@ -242,7 +242,7 @@ def _upp_test_counts(
     enf_cnts_sim_byhhianddelta_array = (
         EMPTY_ARRAYBIGINT
         if (not _hhi_post.size) or np.isnan(next(_hhi_post.flat))
-        else enforcement_counts(
+        else compute_enforcement_counts(
             ArrayBIGINT(
                 np.hstack((
                     ArrayBIGINT(esl.hhi_post_ranger(_hhi_post)),

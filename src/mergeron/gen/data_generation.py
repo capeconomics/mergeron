@@ -51,7 +51,7 @@ from . import UPPTestsCounts
 from .data_generation_functions import market_share_sampler
 from .data_generation_functions import prices_sampler
 from .enforcement_stats import StatsGroup
-from .enforcement_stats import enforcement_counts
+from .enforcement_stats import compute_enforcement_counts
 from .upp_tests import compute_upp_test_counts
 
 __version__ = VERSION
@@ -871,7 +871,7 @@ def _sim_enf_cnts_ll(
     ]
 
     return UPPTestsCounts(*[
-        (ArrayBIGINT([]) if not _g.any() else enforcement_counts(_g, _h))
+        (ArrayBIGINT([]) if not _g.any() else compute_enforcement_counts(_g, _h))
         for _g, _h in zip(
             _res_list_stacks, (StatsGroup.FC, StatsGroup.DL, StatsGroup.HD), strict=True
         )

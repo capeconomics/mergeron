@@ -15,6 +15,7 @@ from .. import ArrayUINT8
 from .. import Enameled
 from ..core import DELTA_HEADER_DICT
 from ..core import HHI_HEADER_DICT
+from ..core import TTL_KEY
 from ..core import INVData
 from ..core import INVTableData
 from . import INVResolution
@@ -59,12 +60,10 @@ class OtherEvidence(str, Enameled):
 
 # Parameters and functions to interpolate selected HHI and ΔHHI values
 #   recorded in fractions to ranges of values in points on the HHI scale
-HHI_POST_KNOTS = np.array(
-    [*[_h for _h in HHI_HEADER_DICT.values() if _h < 10001], 10001], int
-)
-HHI_DELTA_KNOTS = np.array(
-    [*[_d for _d in DELTA_HEADER_DICT.values() if _d < 5001], 5001], int
-)
+HHI_POST_KNOTS, HHI_DELTA_KNOTS = [
+    np.array([*[_v for _v in _d.values() if _v != TTL_KEY], _u], int)
+    for _d, _u in zip((HHI_HEADER_DICT, DELTA_HEADER_DICT), (10001, 5001), strict=True)
+]
 hhi_post_ranger, hhi_delta_ranger = (
     make_interp_spline(_f / 1e4, _f, k=0) for _f in (HHI_POST_KNOTS, HHI_DELTA_KNOTS)
 )
@@ -138,7 +137,7 @@ def enforcement_counts_observed(
         ])
     )
 
-    return enforcement_counts(_counts_array, _stats_group)
+    return compute_enforcement_counts(_counts_array, _stats_group)
 
 
 def table_no_lku(
@@ -175,7 +174,7 @@ def table_no_lku(
     )
 
 
-def enforcement_counts(
+def compute_enforcement_counts(
     _raw_counts: ArrayBIGINT | ArrayUINT8, _stats_group: StatsGroup, /
 ) -> ArrayBIGINT:
     """Summarize investigations data.
@@ -211,10 +210,18 @@ def enforcement_counts(
     elif _stats_group == StatsGroup.DL:
         return ArrayBIGINT(
             np.vstack([
-                np.concatenate([
-                    (_i,),
-                    np.einsum(
-                        "ij->j", _raw_counts[_raw_counts[:, 0] == _i][:, 1:], dtype=int
+                np.asarray([
+                    _i,
+                    *(
+                        np.zeros((1, _rr.shape[1]), dtype=int)
+                        if not (
+                            _r := np.einsum(
+                                "ij->j",
+                                _rr := _raw_counts[_raw_counts[:, 0] == _i][:, 1:],
+                                dtype=int,
+                            )
+                        ).size
+                        else _r
                     ),
                 ])
                 for _i in HHI_DELTA_KNOTS[:-1]
@@ -235,7 +242,15 @@ def enforcement_counts(
                         [
                             _hhi_post_lim,
                             _delta_lim,
-                            *np.einsum("ij->j", _raw_counts_ij[:, 2:], dtype=int),
+                            *(
+                                np.zeros((1, _rr.shape[1]), dtype=int)
+                                if not (
+                                    _r := np.einsum(
+                                        "ij->j", _rr := _raw_counts_ij[:, 2:], dtype=int
+                                    )
+                                ).size
+                                else _r
+                            ),
                         ],
                         dtype=int,
                     ),
