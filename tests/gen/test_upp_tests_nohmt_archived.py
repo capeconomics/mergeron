@@ -61,7 +61,7 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str, str]) -> None:
     """Test enforcement counts with sample restricted by HMT."""
     print(_spec)
     _archive_name = "upp_test_data_nohmt_-{}-{}.zip".format(
-        f"{float(_spec[0]) * 100:1.0f}PCT", _spec[1:]
+        f"{float(_spec[0]) * 100:1.0f}PCT", "-".join(_spec[1:])
     )
 
     (

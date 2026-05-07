@@ -23,7 +23,7 @@ from mergeron.gen import SHRDistribution
 from mergeron.gen import StatsGroup
 from mergeron.gen import UPPTestRegime
 from mergeron.gen.data_generation import MarketSample
-from mergeron.gen.enforcement_stats import enforcement_counts
+from mergeron.gen.enforcement_stats import compute_enforcement_counts
 
 SAMPLE_SIZE = 10**6
 ENFT_THRESHOLDS = GuidelinesStandards(2023).presumption
@@ -181,7 +181,7 @@ def test_upp_tests_counts(_spec: dict, _expected: dict) -> None:
             _market_sample.enforcement_counts.ByDelta[::-1], _expected["ByDelta"]
         )
         and np.array_equal(
-            enforcement_counts(
+            compute_enforcement_counts(
                 _market_sample.enforcement_counts.ByHHIandDelta[:, 1:], StatsGroup.DL
             )[::-1],
             _expected["ByDelta"],
