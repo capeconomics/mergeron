@@ -65,40 +65,40 @@ def compute_upp_test_counts(
         getattr(_upp_test_parms, _f) for _f in ("guppi", "dr", "cmcr", "ipr")
     )
 
-    _frmshr_array, _pcm_array, _price_array = (
+    _mrgng_firm_shares, _margins, _prices = (
         getattr(_market_data_sample, _f)[:, :2]
-        for _f in ("share_array", "pcm_array", "price_array")
+        for _f in ("shares", "margins", "prices")
     )
-    _aggr_purch_prob = _market_data_sample.aggregate_purchase_probability
-    _divratio_array = compute_merging_firm_diversion_ratios(
+    _aggr_purch_prob = _market_data_sample.aggregate_choice_probability
+    _diversion_ratios = compute_merging_firm_diversion_ratios(
         _share_spec.recapture_form,
         _share_spec.recapture_rate,
-        _frmshr_array,
+        _mrgng_firm_shares,
         _aggr_purch_prob,
     )
 
-    _share_array = _market_data_sample.share_array
+    _market_shares = _market_data_sample.shares
     _hhi_delta = ArrayDouble(
-        np.einsum("ij,ij->i", _frmshr_array, _frmshr_array[:, ::-1])[:, None]
+        np.einsum("ij,ij->i", _mrgng_firm_shares, _mrgng_firm_shares[:, ::-1])[:, None]
     )
     if _share_spec.distribution == SHRDistribution.UNI:
         _fcounts, _hhi_post = ArrayUINT8(EMPTY_ARRAYBIGINT), EMPTY_ARRAYDOUBLE
     else:
         _fcounts = ArrayUINT8(
-            np.einsum("ij->i", _share_array > 0, dtype="<u1")[:, None]
+            np.einsum("ij->i", _market_shares > 0, dtype="<u1")[:, None]
         )
         _hhi_post = ArrayDouble(
-            _hhi_delta + np.einsum("ij,ij->i", _share_array, _share_array)[:, None]
+            _hhi_delta + np.einsum("ij,ij->i", _market_shares, _market_shares)[:, None]
         )
 
-    _sample_size = len(_frmshr_array)
+    _sample_size = len(_mrgng_firm_shares)
     _iter_count = ceil(_sample_size / SUBSAMPLE_SIZE)
     if _iter_count == 1:
         return _upp_test_counts(
-            _divratio_array,
-            _frmshr_array,
-            _pcm_array,
-            _price_array,
+            _diversion_ratios,
+            _mrgng_firm_shares,
+            _margins,
+            _prices,
             _fcounts,
             _hhi_delta,
             _hhi_post,
@@ -115,18 +115,18 @@ def compute_upp_test_counts(
     ):
         _res_list = Parallel()(
             delayed(_upp_test_counts)(
-                _divratio_array[
+                _diversion_ratios[
                     (_si := _idx * SUBSAMPLE_SIZE) : (
                         _ei := (
-                            len(_divratio_array)
+                            len(_diversion_ratios)
                             if (_idx + 1) == _iter_count
                             else (_idx + 1) * SUBSAMPLE_SIZE
                         )
                     )
                 ],
-                _frmshr_array[_si:_ei],
-                _pcm_array[_si:_ei],
-                _price_array[_si:_ei],
+                _mrgng_firm_shares[_si:_ei],
+                _margins[_si:_ei],
+                _prices[_si:_ei],
                 _fcounts[_si:_ei],
                 _hhi_delta[_si:_ei],
                 _hhi_post[_si:_ei],
@@ -154,10 +154,10 @@ def compute_upp_test_counts(
 
 
 def _upp_test_counts(
-    _divratio_array: ArrayDouble,
-    _frmshr_array: ArrayDouble,
-    _pcm_array: ArrayDouble,
-    _price_array: ArrayDouble,
+    _diversion_ratios: ArrayDouble,
+    _mrgng_firm_shares: ArrayDouble,
+    _margins: ArrayDouble,
+    _prices: ArrayDouble,
     _fcounts: ArrayUINT8,
     _hhi_delta: ArrayDouble,
     _hhi_post: ArrayDouble,
@@ -169,32 +169,32 @@ def _upp_test_counts(
     /,
 ) -> UPPTestsCounts:
     guppi_array, ipr_array, cmcr_array = (
-        ArrayDouble(np.empty_like(_divratio_array)) for _ in range(3)
+        ArrayDouble(np.empty_like(_diversion_ratios)) for _ in range(3)
     )
 
     np.einsum(
         "ij,ij,ij->ij",
-        _divratio_array,
-        _pcm_array[:, ::-1],
-        _price_array[:, ::-1] / _price_array,
+        _diversion_ratios,
+        _margins[:, ::-1],
+        _prices[:, ::-1] / _prices,
         out=guppi_array,
     )
 
     np.divide(
-        np.einsum("ij,ij->ij", _pcm_array, _divratio_array),
-        1 - _divratio_array,
+        np.einsum("ij,ij->ij", _margins, _diversion_ratios),
+        1 - _diversion_ratios,
         out=ipr_array,
     )
 
-    np.divide(ipr_array, 1 - _pcm_array, out=cmcr_array)
+    np.divide(ipr_array, 1 - _margins, out=cmcr_array)
 
     (divr_test_vector,) = _compute_test_vector_seq(
-        (_divratio_array,), _frmshr_array, _upp_test_regime.diversion_aggregator
+        (_diversion_ratios,), _mrgng_firm_shares, _upp_test_regime.diversion_aggregator
     )
 
     (guppi_test_vector, cmcr_test_vector, ipr_test_vector) = _compute_test_vector_seq(
         (guppi_array, cmcr_array, ipr_array),
-        _frmshr_array,
+        _mrgng_firm_shares,
         _upp_test_regime.guppi_aggregator,
     )
     del cmcr_array, ipr_array, guppi_array

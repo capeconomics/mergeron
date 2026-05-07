@@ -32,11 +32,9 @@ from . import HSR_BETA_PARMS
 from . import HSR_RATIO
 from . import SUBSAMPLE_SIZE
 from . import HSRFilingTest
-from . import MarginsData
 from . import PCMDistribution
 from . import PCMRestriction
 from . import PCMSpec
-from . import PricesData
 from . import PriceSpec
 from . import SeedSequenceData
 from . import ShareSpec
@@ -82,9 +80,9 @@ def market_share_sampler(
     _fcount_rng_seed_seq = _seed_data.fcounts
     _mktshr_rng_seed_seq = _seed_data.share
 
-    aggregate_purchase_probability = EMPTY_ARRAYDOUBLE
+    aggregate_choice_probability = EMPTY_ARRAYDOUBLE
     if dist_type_mktshr == SHRDistribution.UNI:
-        _share_array = market_share_sampler_uniform(
+        _market_shares = market_share_sampler_uniform(
             dist_parms_mktshr,
             _sample_size,
             share_lower_bound,
@@ -92,7 +90,7 @@ def market_share_sampler(
             _nthreads,
         )
     elif dist_type_mktshr.name.startswith("DIR_"):
-        _share_array, aggregate_purchase_probability = (
+        _market_shares, aggregate_choice_probability = (
             _market_share_sampler_dirichlet_pooled(
                 _share_spec,
                 _sample_size,
@@ -114,12 +112,12 @@ def market_share_sampler(
             raise ValueError(
                 "Recapture rate must be specified for inside-out recapture."
             )
-        # treating r_bar as the recapture rate for the smaller merging firm, 1 - π_0:
-        aggregate_purchase_probability = (_r := _share_spec.recapture_rate) / (
-            1 - (1 - _r) * _share_array[:, :2].min(axis=1, keepdims=True)
+        # treating r_bar as the recapture rate for the smaller merging firm, 1 - π_0,
+        aggregate_choice_probability = (_r := _share_spec.recapture_rate) / (
+            1 - (1 - _r) * _market_shares[:, :2].min(axis=1, keepdims=True)
         )
 
-    return _share_array, aggregate_purchase_probability
+    return _market_shares, aggregate_choice_probability
 
 
 def market_share_sampler_uniform(
@@ -238,13 +236,13 @@ def _market_share_sampler_dirichlet_pooled(
 
     fc_max = fcount_keys[-1]
     mktshr_array = ArrayDouble(np.empty((_ssz, fc_max)))
-    aggr_purch_prob = EMPTY_ARRAYDOUBLE
+    aggr_choice_prob = EMPTY_ARRAYDOUBLE
 
     mktshr_seed_seq_ch = _mktshr_rng_seed_seq.spawn(len(fcount_keys))
 
     if _recapture_form == RECForm.OUTIN:
         fcount_keys += 1
-        aggr_purch_prob = ArrayDouble(np.empty((_ssz, 1)))
+        aggr_choice_prob = ArrayDouble(np.empty((_ssz, 1)))
         if (_s := len(_share_parameters)) < (_l := fcount_keys[-1]):
             _share_parameters = np.concatenate([
                 _share_parameters,
@@ -286,19 +284,19 @@ def _market_share_sampler_dirichlet_pooled(
         )
 
         if _recapture_form == RECForm.OUTIN:
-            aggregate_purchase_prob_f = 1 - mktshr_array_f[:, [-1]]
+            aggr_choice_prob_f = 1 - mktshr_array_f[:, [-1]]
 
-            mktshr_array_f = mktshr_array_f[:, :-1] / aggregate_purchase_prob_f
+            mktshr_array_f = mktshr_array_f[:, :-1] / aggr_choice_prob_f
             # If recapture_form is not 'outside_in', then
-            # aggr_purch_prob is calculated downstream, leave it empty
-            aggr_purch_prob[fcounts_match_rows] = aggregate_purchase_prob_f
+            # aggr_choice_prob is calculated downstream, leave it empty
+            aggr_choice_prob[fcounts_match_rows] = aggr_choice_prob_f
 
         # Push data for present sample to parent array
         mktshr_array[fcounts_match_rows] = np.pad(
             mktshr_array_f, ((0, 0), (0, fc_max - mktshr_array_f.shape[1])), "constant"
         )
 
-    return (mktshr_array, aggr_purch_prob)
+    return (mktshr_array, aggr_choice_prob)
 
 
 def _dir_alphas_builder(
@@ -370,7 +368,7 @@ def market_share_sampler_dirichlet(
 def compute_merging_firm_diversion_ratios(
     _recapture_form: RECForm,
     _recapture_rate: float | None,
-    _share_array: ArrayDouble,
+    _market_shares: ArrayDouble,
     _aggr_purch_prob: ArrayDouble,
     /,
 ) -> ArrayDouble:
@@ -386,7 +384,7 @@ def compute_merging_firm_diversion_ratios(
         If recapture is proportional or inside-out, the recapture rate
         for the firm with the smaller share.
 
-    _share_array
+    _market_shares
         Generated market shares.
 
     _aggr_purch_prob
@@ -410,15 +408,17 @@ def compute_merging_firm_diversion_ratios(
                 "If recapture form is, RECForm.FIXED, a recapture rate must be supplied."
             )
         return ArrayDouble(
-            _recapture_rate * (_fsa := _share_array[:, :2])[:, ::-1] / (1 - _fsa)
+            _recapture_rate * (_fsa := _market_shares[:, :2])[:, ::-1] / (1 - _fsa)
         )
 
     else:
         return ArrayDouble(
             np.divide(
-                (_ppa := np.einsum("ij,ij->ij", _aggr_purch_prob, _share_array[:, :2]))[
-                    :, ::-1
-                ],
+                (
+                    _ppa := np.einsum(
+                        "ij,ij->ij", _aggr_purch_prob, _market_shares[:, :2]
+                    )
+                )[:, ::-1],
                 1 - _ppa,
             )
         )
@@ -427,7 +427,7 @@ def compute_merging_firm_diversion_ratios(
 def compute_all_firm_diversion_ratios(
     _recapture_form: RECForm,
     _recapture_rate: float | None,
-    _share_array: ArrayDouble,
+    _market_shares: ArrayDouble,
     _aggr_purch_prob: ArrayDouble,
     /,
 ) -> ArrayDouble:
@@ -453,7 +453,7 @@ def compute_all_firm_diversion_ratios(
         If recapture is proportional or inside-out, the recapture rate
         for the firm with the smaller share.
 
-    _share_array
+    _market_shares
         Generated market shares.
 
     _aggr_purch_prob
@@ -476,7 +476,7 @@ def compute_all_firm_diversion_ratios(
             raise ValueError(
                 "If recapture form is, RECForm.FIXED, a recapture rate must be supplied."
             )
-        _purchase_prob = _share_array
+        _purchase_prob = _market_shares
     else:
         if not _aggr_purch_prob.size:
             raise ValueError(
@@ -484,7 +484,7 @@ def compute_all_firm_diversion_ratios(
                 "diversion ratio computation is infeasible unless "
                 "aggregate choice probabilities are provided."
             )
-        _purchase_prob = _aggr_purch_prob * _share_array
+        _purchase_prob = _aggr_purch_prob * _market_shares
 
     _n = _purchase_prob.shape[1]
 
@@ -505,12 +505,12 @@ def prices_sampler(
     _pcm_spec: PCMSpec,
     _price_spec: PriceSpec,
     _hsr_filing_test_type: HSRFilingTest,
-    _mktshr_array: ArrayDouble,
+    _market_shares: ArrayDouble,
     _aggr_purch_prob: ArrayDouble,
     _seed_data: SeedSequenceData,
     _nthreads: int,
     /,
-) -> tuple[MarginsData, PricesData]:
+) -> tuple[ArrayDouble, ArrayDouble, ArrayBoolean, ArrayBoolean]:
     """Generate margin and price data for mergers in the sample.
 
     Parameters
@@ -530,7 +530,7 @@ def prices_sampler(
         Enum specifying restriction, if any, to impose on market data sample
         to model HSR filing requirements; see :class:`mergeron.gen.HSRFilingTest`.
 
-    _mktshr_array
+    _market_shares
         Generated market shares.
 
     _aggr_purch_prob
@@ -546,7 +546,8 @@ def prices_sampler(
 
     Returns
     -------
-        Simulated margin- and price-data arrays for mergers in the sample.
+        Simulated price- and margin-data arrays, with MNL and HSR-filing test vectors, for
+        mergers in the sample.
     """
     _pcm_rng_seed_seq, _price_rng_seed_seq, _hsr_rng_seed_seq = (
         getattr(_seed_data, _a) for _a in ("pcm", "price", "hsr_filing_test")
@@ -554,9 +555,10 @@ def prices_sampler(
 
     _lower_bound = _share_spec.lower_bound
 
-    price_array = ArrayDouble(np.ones_like(_mktshr_array))
-    margin_data = MarginsData(
-        ArrayDouble(np.array([], float)), ArrayBoolean(np.array([], bool))
+    price_array = ArrayDouble(np.ones_like(_market_shares))
+    pcm_array, mnl_test = (
+        ArrayDouble(np.array([], float)),
+        ArrayBoolean(np.array([], bool)),
     )
 
     nth_firm_share = EMPTY_ARRAYDOUBLE
@@ -566,8 +568,8 @@ def prices_sampler(
     if not share_uni_flag:
         nth_firm_share = ArrayDouble(
             np.take_along_axis(
-                _mktshr_array,
-                np.einsum("ij->i", _mktshr_array > 0, dtype="<u1")[:, None] - 1,
+                _market_shares,
+                np.einsum("ij->i", _market_shares > 0, dtype="<u1")[:, None] - 1,
                 axis=1,
             )
         )
@@ -578,7 +580,7 @@ def prices_sampler(
         price_array, nth_firm_price = _share_correlated_number(
             _price_spec,
             share_uni_flag,
-            _mktshr_array,
+            _market_shares,
             nth_firm_share,
             _price_rng_seed_seq,
         )
@@ -587,58 +589,54 @@ def prices_sampler(
             (1.0, 1.0)
             if _price_spec == PriceSpec.COST_SYM
             else _share_correlated_number(
-                _price_spec, False, _mktshr_array, nth_firm_share, _price_rng_seed_seq
+                _price_spec, False, _market_shares, nth_firm_share, _price_rng_seed_seq
             )
         )
+
         if share_uni_flag:
-            frmshr_array_plus = _mktshr_array
+            _mktshr_plus = _market_shares
             _pcm_scaler_plus = _pcm_scaler
         else:
-            frmshr_array_plus = ArrayDouble(np.hstack((_mktshr_array, nth_firm_share)))
+            _mktshr_plus = ArrayDouble(np.hstack((_market_shares, nth_firm_share)))
             _pcm_scaler_plus = (
                 1.0
                 if _price_spec == PriceSpec.COST_SYM
                 else ArrayDouble(np.hstack((_pcm_scaler, _pcm_scaler_nth)))
             )
 
-        margin_data = _margins_sampler(
+        pcm_array, mnl_test = _margins_sampler(
             _pcm_spec,
             _price_spec,
             _pcm_scaler_plus,
-            frmshr_array_plus,
+            _mktshr_plus,
             _aggr_purch_prob,
             _pcm_rng_seed_seq,
             _nthreads,
         )
 
-        pcm_array = margin_data.pcm_array
         price_array = np.divide(_pcm_scaler_plus, 1 - pcm_array)
         if not share_uni_flag:
             price_array, nth_firm_price = price_array[:, :-1], price_array[:, [-1]]
-            pcm_array = pcm_array[:, :-1]
-
-        margin_data = MarginsData(pcm_array, margin_data.mnl_test)
+            pcm_array = ArrayDouble(pcm_array[:, :-1])
     elif _price_spec != PriceSpec.PRICE_SYM:
         raise ValueError(
             f'Specification of price distribution, "{_price_spec.value}" is invalid.'
         )
-    margin_data = (
-        margin_data
-        if margin_data.pcm_array.size
-        else _margins_sampler(
+
+    if not pcm_array.size:
+        pcm_array, mnl_test = _margins_sampler(
             _pcm_spec,
             _price_spec,
             price_array,
-            _mktshr_array,
+            _market_shares,
             _aggr_purch_prob,
             _pcm_rng_seed_seq,
             _nthreads,
         )
-    )
 
     if _hsr_filing_test_type.name.startswith("HSR_"):
         # _mfra: computed merging firms' revenues over sample
-        mfra = np.einsum("ij,ij->ij", price_array[:, :2], _mktshr_array[:, :2])
+        mfra = np.einsum("ij,ij->ij", price_array[:, :2], _market_shares[:, :2])
 
         if _hsr_filing_test_type == HSRFilingTest.SoP_TEN:
             hsr_filing_test = (
@@ -689,15 +687,15 @@ def prices_sampler(
 
     else:
         # Otherwise, all draws meet the filing test
-        hsr_filing_test = np.full(len(_mktshr_array), True)
+        hsr_filing_test = np.full(len(_market_shares), True)
 
-    return margin_data, PricesData(price_array, hsr_filing_test)
+    return ArrayDouble(price_array), pcm_array, mnl_test, ArrayBoolean(hsr_filing_test)
 
 
 def _share_correlated_number(
     _correlation_spec: PriceSpec,
     _share_uni_flag: bool,
-    _share_array: ArrayDouble,
+    _market_shares: ArrayDouble,
     _nth_firm_share: ArrayDouble,
     _seed_sequence: SeedSequence | None,
 ) -> tuple[ArrayDouble, ArrayDouble]:
@@ -705,19 +703,21 @@ def _share_correlated_number(
 
     match _correlation_spec:
         case PriceSpec.PRICE_POS | PriceSpec.COST_POS:
-            _pricing_array = _sharelator(_share_array)
+            _pricing_array = _sharelator(_market_shares)
             if not _share_uni_flag:
                 nth_firm_price = _sharelator(_nth_firm_share)
 
         case PriceSpec.PRICE_NEG | PriceSpec.COST_NEG:
-            _pricing_array = _sharelator(1 - _share_array)  # type: ignore
+            _pricing_array = _sharelator(1 - _market_shares)  # type: ignore
             if not _share_uni_flag:
                 nth_firm_price = _sharelator(1 - _nth_firm_share)  # type: ignore
 
         case PriceSpec.PRICE_RND | PriceSpec.COST_RND:
-            ncols = _share_array.shape[1] + (0 if _share_uni_flag else 1)
+            ncols = _market_shares.shape[1] + (0 if _share_uni_flag else 1)
             _pricing_array = (
-                prng(_seed_sequence).integers(1, 5 + 1, size=(len(_share_array), ncols))
+                prng(_seed_sequence).integers(
+                    1, 5 + 1, size=(len(_market_shares), ncols)
+                )
                 / 5.0
             )
             if not _share_uni_flag:
@@ -732,20 +732,20 @@ def _share_correlated_number(
     return ArrayDouble(_pricing_array), ArrayDouble(nth_firm_price)
 
 
-def _sharelator(_share_array: ArrayDouble) -> ArrayDouble:
-    return ArrayDouble(np.ceil(_share_array * 5.0) / 5.0)
+def _sharelator(_market_shares: ArrayDouble) -> ArrayDouble:
+    return ArrayDouble(np.ceil(_market_shares * 5.0) / 5.0)
 
 
 def _margins_sampler(
     _pcm_spec: PCMSpec,
     _price_spec: PriceSpec,
     _pcm_scaler: float | ArrayDouble,
-    _mktshr_array: ArrayDouble,  # mc if PriceSpec.COST_SYM else p
+    _market_shares: ArrayDouble,  # mc if PriceSpec.COST_SYM else p
     _aggr_purch_prob: ArrayDouble,
     _pcm_rng_seed_seq: SeedSequence,
     _nthreads: int,
     /,
-) -> MarginsData:
+) -> tuple[ArrayDouble, ArrayBoolean]:
     _pcm_distribution, _pcm_parms, _pcm_restriction = (
         getattr(_pcm_spec, _f)
         for _f in ("distribution", "parameters", "pcm_restriction")
@@ -756,19 +756,19 @@ def _margins_sampler(
             _pcm_distribution,
             _pcm_parms,
             sample_size=(
-                (len(_mktshr_array), 1)
+                (len(_market_shares), 1)
                 if _pcm_spec.pcm_restriction in {PCMRestriction.SYM, PCMRestriction.MNL}
-                else _mktshr_array.shape
+                else _market_shares.shape
             ),
             seed_sequence=_pcm_rng_seed_seq,
             nthreads=_nthreads,
         )
 
     else:
-        pcm_array = (
-            np.empty_like(_mktshr_array[:, :1])
+        pcm_array = ArrayDouble(
+            np.empty_like(_market_shares[:, :1])
             if _pcm_spec.pcm_restriction in {PCMRestriction.SYM, PCMRestriction.MNL}
-            else np.empty_like(_mktshr_array)
+            else np.empty_like(_market_shares)
         )
 
         MultithreadedRNG(
@@ -779,12 +779,12 @@ def _margins_sampler(
             nthreads=_nthreads,
         ).fill()
 
-    mnl_test = np.full(len(pcm_array), True)
+    mnl_test = ArrayBoolean(np.full(len(pcm_array), True))
     if _pcm_restriction == PCMRestriction.SYM:
-        pcm_array = np.hstack((pcm_array,) * _mktshr_array.shape[1])
+        pcm_array = ArrayDouble(np.hstack((pcm_array,) * _market_shares.shape[1]))
     elif _pcm_restriction == PCMRestriction.MNL:
         # Impose FOCs from profit-maximization with MNL demand
-        purchase_prob_array = _aggr_purch_prob * _mktshr_array
+        purchase_prob_array = _aggr_purch_prob * _market_shares
 
         if _price_spec.name.startswith("COST_"):
             _nr_0 = np.divide(
@@ -808,46 +808,51 @@ def _margins_sampler(
                     "ij,ij->ij", _pcm_scaler[:, 1:], 1 - purchase_prob_array[:, 1:]
                 )
             )
-            pcm_array = np.hstack((pcm_array, np.divide(_nr_0, _nr_0 + _dr_1)))
+            pcm_array = ArrayDouble(
+                np.hstack((pcm_array, np.divide(_nr_0, _nr_0 + _dr_1)))
+            )
             del _nr_0, _dr_1
 
-            return MarginsData(pcm_array, mnl_test)
-
-        elif _price_spec.name.startswith("PRICE_"):
-            pcm_array = np.hstack((
-                pcm_array,
-                np.divide(
-                    np.einsum(
-                        "ij,ij->ij", pcm_array[:, :1], 1 - purchase_prob_array[:, :1]
-                    ),
-                    1 - purchase_prob_array[:, 1:],
-                )
-                if isinstance(_pcm_scaler, int | float)
-                else np.divide(
-                    np.einsum(
-                        "ij,ij,ij->ij",
-                        _pcm_scaler[:, :1],
-                        pcm_array[:, :1],
-                        1 - purchase_prob_array[:, :1],
-                    ),
-                    np.einsum(
-                        "ij,ij->ij", _pcm_scaler[:, 1:], 1 - purchase_prob_array[:, 1:]
-                    ),
-                ),
-            ))
+            return pcm_array, mnl_test
 
         else:
-            raise ValueError(
-                "Expected price array as second argument to _margins_sampler, got float."
+            pcm_array = ArrayDouble(
+                np.hstack((
+                    pcm_array,
+                    np.divide(
+                        np.einsum(
+                            "ij,ij->ij",
+                            pcm_array[:, :1],
+                            1 - purchase_prob_array[:, :1],
+                        ),
+                        1 - purchase_prob_array[:, 1:],
+                    )
+                    if isinstance(_pcm_scaler, int | float)
+                    else np.divide(
+                        np.einsum(
+                            "ij,ij,ij->ij",
+                            _pcm_scaler[:, :1],
+                            pcm_array[:, :1],
+                            1 - purchase_prob_array[:, :1],
+                        ),
+                        np.einsum(
+                            "ij,ij->ij",
+                            _pcm_scaler[:, 1:],
+                            1 - purchase_prob_array[:, 1:],
+                        ),
+                    ),
+                ))
             )
 
-        mnl_test = np.logical_and(
-            (pcm_array[:, 1:] >= 0).all(axis=1), (pcm_array[:, 1:] <= 1).all(axis=1)
+        mnl_test = ArrayBoolean(
+            np.logical_and(
+                (pcm_array[:, 1:] >= 0).all(axis=1), (pcm_array[:, 1:] <= 1).all(axis=1)
+            )
         )
 
     # else:  # This is a no-op, so commented out
 
-    return MarginsData(pcm_array, mnl_test)
+    return pcm_array, mnl_test
 
 
 def _margin_resampler(
@@ -899,15 +904,15 @@ def _margin_resampler(
         )
     else:
         _alpha, _beta, _loc, _scale = beta_located_bound(_dist_parms.margin_stats)
-        _pcm_array = np.empty(sample_size)
+        pcm_array = np.empty(sample_size)
         MultithreadedRNG(
-            _pcm_array,
+            pcm_array,
             distribution="Beta",
             parameters=ArrayFloat([_alpha, _beta]),
             seed_sequence=seed_sequence,
             nthreads=nthreads,
         ).fill()
-        return ArrayDouble(_loc + _scale * _pcm_array)
+        return ArrayDouble(_loc + _scale * pcm_array)
 
 
 def _margin_resampler_multimodal_multithreaded(
@@ -930,7 +935,7 @@ def _margin_resampler_multimodal_multithreaded(
 
     return np.vstack(
         Parallel(backend="threading", n_jobs=min(_nthreads, _iter_count))(
-            delayed(_simple_resampler)(
+            delayed(_multimodal_resampler)(
                 _margin_values,
                 _kernel_bandwidth,
                 (
@@ -949,7 +954,7 @@ def _margin_resampler_multimodal_multithreaded(
     )
 
 
-def _simple_resampler(
+def _multimodal_resampler(
     _values: ArrayDouble,
     _bandwidth: ArrayDouble,
     _ssz: int | tuple[int, ...],
@@ -957,7 +962,7 @@ def _simple_resampler(
     _r2: Generator,
     /,
 ) -> NDArray[np.float64]:
-    """Generate multimodal draws on the empirical (margin) distribution. [#_simple_resampler]_
+    """Generate multimodal draws on the empirical (margin) distribution. [#_multimodal_resampler]_
 
     Parameters
     ----------
@@ -980,7 +985,7 @@ def _simple_resampler(
 
     References
     ----------
-    .. [#_simple_resampler] See, https://kdepy.readthedocs.io/en/latest/examples.html#resampling-from-the-distribution
+    .. [#_multimodal_resampler] See, https://kdepy.readthedocs.io/en/latest/examples.html#resampling-from-the-distribution
 
     """  # noqa: D400
     return _values[

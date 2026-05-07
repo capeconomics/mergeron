@@ -592,35 +592,31 @@ def _markets_sampler(
     _shr_ssz = int(_shr_scale * _final_ssz)
 
     # Generate share data
-    mktshr_array, aggr_purch_prob = market_share_sampler(
+    mktshr_array, aggr_choice_prob = market_share_sampler(
         _market_sample.share_spec, _shr_ssz, seed_data, nthreads
     )
     # Generate merging-firm price and PCM data
-    margin_data, price_data = prices_sampler(
+    price_array, pcm_array, mnl_test, hsr_filing_test = prices_sampler(
         _market_sample.share_spec,
         _market_sample.pcm_spec,
         _market_sample.price_spec,
         _market_sample.hsr_filing_test_type,
         mktshr_array,
-        aggr_purch_prob,
+        aggr_choice_prob,
         seed_data,
         nthreads,
     )
 
-    pcm_array = margin_data.pcm_array
-
-    price_array = price_data.price_array
-
     if _shr_scale > 1.0:
-        mnl_test_rows = margin_data.mnl_test * price_data.hsr_filing_test
+        mnl_test_rows = mnl_test * hsr_filing_test
 
         mktshr_array = mktshr_array[mnl_test_rows]
         pcm_array = pcm_array[mnl_test_rows]
         price_array = price_array[mnl_test_rows]
-        aggr_purch_prob = (
-            aggr_purch_prob
+        aggr_choice_prob = (
+            aggr_choice_prob
             if _market_sample.share_spec.recapture_form == RECForm.FIXED
-            else aggr_purch_prob[mnl_test_rows]
+            else aggr_choice_prob[mnl_test_rows]
         )
 
         del mnl_test_rows
@@ -630,40 +626,40 @@ def _markets_sampler(
         or _market_sample.share_spec.distribution == SHRDistribution.UNI
     ):
         return MarketsData(
-            share_array=mktshr_array[:_final_ssz],
-            price_array=price_array[:_final_ssz],
-            pcm_array=pcm_array[:_final_ssz],
-            aggregate_purchase_probability=aggr_purch_prob[:_final_ssz],
+            shares=mktshr_array[:_final_ssz],
+            margins=pcm_array[:_final_ssz],
+            prices=price_array[:_final_ssz],
+            aggregate_choice_probability=aggr_choice_prob[:_final_ssz],
         )
 
     hmt_mkt_flag, hmt_prod_flag = _recapture_hmt(
-        _market_sample.hmt_flag, mktshr_array, aggr_purch_prob, price_array, pcm_array
+        _market_sample.hmt_flag, mktshr_array, aggr_choice_prob, price_array, pcm_array
     )
 
     if _market_sample.hmt_flag.recompute_shares:
         mktshr_array_hmt = np.divide(
-            (_mr := mktshr_array * hmt_prod_flag), np.einsum("ij->i", _mr)[:, None]
+            _mr := mktshr_array * hmt_prod_flag, _ma := np.einsum("ij->i", _mr)[:, None]
         )
-        aggr_purch_prob_hmt = np.einsum("ij->i", _mr)[:, None]
+        aggr_choice_prob_hmt = aggr_choice_prob * _ma
     else:
         mktshr_array_hmt = mktshr_array
-        aggr_purch_prob_hmt = aggr_purch_prob
+        aggr_choice_prob_hmt = aggr_choice_prob
     del mktshr_array
 
     return MarketsData(
-        share_array=mktshr_array_hmt[hmt_mkt_flag][:_final_ssz],
-        pcm_array=pcm_array[hmt_mkt_flag][:_final_ssz],
-        price_array=price_array[hmt_mkt_flag][:_final_ssz],
-        aggregate_purchase_probability=aggr_purch_prob_hmt[hmt_mkt_flag][:_final_ssz],
+        shares=mktshr_array_hmt[hmt_mkt_flag][:_final_ssz],
+        margins=pcm_array[hmt_mkt_flag][:_final_ssz],
+        prices=price_array[hmt_mkt_flag][:_final_ssz],
+        aggregate_choice_probability=aggr_choice_prob_hmt[hmt_mkt_flag][:_final_ssz],
     )
 
 
 def _recapture_hmt(
     _hmt_flag: HMTSpec,
-    _mktshr_array: ArrayDouble,
+    _market_shares: ArrayDouble,
     _aggr_purch_prob: ArrayDouble,
-    _price_array: ArrayDouble,
-    _pcm_array: ArrayDouble,
+    _prices: ArrayDouble,
+    _margins: ArrayDouble,
     /,
 ) -> tuple[ArrayBoolean, ArrayBoolean]:
     """
@@ -676,17 +672,17 @@ def _recapture_hmt(
         market for the given product, using the specified SSNIP level and
         passthrough rate and whether to recompute shares.
 
-    _mktshr_array
+    _market_shares
         All-firm market shares.
 
     _aggr_purch_prob
         1 minus probability that the outside good is chosen; converts
         market shares to choice probabilities by multiplication.
 
-    _price_array
+    _prices
         All-firm prices.
 
-    _pcm_array
+    _margins
         All-firm marginal costs.
 
     Returns
@@ -700,18 +696,18 @@ def _recapture_hmt(
         diversion ratio between the merging firms.
 
     """
-    _purchase_prob_array = np.einsum("ij,ij->ij", _aggr_purch_prob, _mktshr_array)
+    _choice_probabilities = np.einsum("ij,ij->ij", _aggr_purch_prob, _market_shares)
 
     _prod_idx = _hmt_flag.product_index
 
     divratio_1j = np.divide(
-        _purchase_prob_array, 1 - _purchase_prob_array[:, [_prod_idx]]
+        _choice_probabilities, 1 - _choice_probabilities[:, [_prod_idx]]
     )
     divratio_1j[:, [_prod_idx]] = np.zeros_like(divratio_1j[:, [_prod_idx]])
 
     guppi_1 = np.divide(
-        np.einsum("ij,ij,ij->ij", divratio_1j, _pcm_array, _price_array),
-        _price_array[:, [_prod_idx]],
+        np.einsum("ij,ij,ij->ij", divratio_1j, _margins, _prices),
+        _prices[:, [_prod_idx]],
     )
 
     return (

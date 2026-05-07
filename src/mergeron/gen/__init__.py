@@ -30,7 +30,7 @@ from .. import EMPTY_ARRAYUINT8 as EMPTY_ARRAYUINT8
 from .. import VERSION
 from .. import YAML
 from .. import ArrayBIGINT
-from .. import ArrayBoolean
+from .. import ArrayBoolean as ArrayBoolean
 from .. import ArrayDouble
 from .. import ArrayFloat
 from .. import ArrayINT
@@ -653,22 +653,16 @@ class HSRFilingTest(str, Enameled):
 class MarketsData:
     """Container for generated market sample dataset."""
 
-    share_array: ArrayDouble = field(
-        eq=cmp_using(eq=np.array_equal), converter=ArrayDouble
-    )
+    shares: ArrayDouble = field(eq=cmp_using(eq=np.array_equal), converter=ArrayDouble)
     """Generated market shares, with zeros for markets with fewer firms than the maximum."""
 
-    pcm_array: ArrayDouble = field(
-        eq=cmp_using(eq=np.array_equal), converter=ArrayDouble
-    )
+    margins: ArrayDouble = field(eq=cmp_using(eq=np.array_equal), converter=ArrayDouble)
     """Generated prices; normalized to 1 in default specification)"""
 
-    price_array: ArrayDouble = field(
-        eq=cmp_using(eq=np.array_equal), converter=ArrayDouble
-    )
+    prices: ArrayDouble = field(eq=cmp_using(eq=np.array_equal), converter=ArrayDouble)
     """Generated price-cost margins (PCM)"""
 
-    aggregate_purchase_probability: ArrayDouble = field(
+    aggregate_choice_probability: ArrayDouble = field(
         eq=cmp_using(eq=np.array_equal),
         default=EMPTY_ARRAYDOUBLE,
         converter=ArrayDouble,
@@ -698,44 +692,6 @@ class MarketsData:
         with h5py.File(_hfh, "r") as _h5f:
             _retval = cls(**{_a: _v[:] for _a, _v in _h5f.items()})
         return _retval
-
-
-@frozen
-class PricesData:
-    """Container for generated price array, and related."""
-
-    price_array: ArrayDouble = field(
-        eq=cmp_using(eq=np.array_equal), converter=ArrayDouble
-    )
-    """Merging-firms' prices"""
-
-    hsr_filing_test: ArrayBoolean = field(
-        eq=cmp_using(eq=np.array_equal), converter=ArrayBoolean
-    )
-    """Flags draws as meeting HSR filing thresholds or not"""
-
-
-@frozen
-class MarginsData:
-    """Container for generated margin array and related MNL test array."""
-
-    pcm_array: ArrayDouble = field(
-        eq=cmp_using(eq=np.array_equal), converter=ArrayDouble
-    )
-    """Merging-firms' PCMs"""
-
-    mnl_test: ArrayBoolean = field(
-        eq=cmp_using(eq=np.array_equal), converter=ArrayBoolean
-    )
-    """Flags infeasible observations as False and rest as True
-
-    Applying restrictions from Bertrand-Nash oligopoly with MNL demand results
-    in some draws of Firm 2 PCM falling outside the feasible interval, :math:`[0, 1]`
-    for certain combinations of merging firms shares as initially drawn. Such draws
-    are flagged as infeasible (False) in :code:`mnl_test` while draws with
-    feasible PCM values flagged True. This array is used to exclude infeasible draws
-    when imposing MNL demand in simulations.
-    """
 
 
 @YAML.register_class
