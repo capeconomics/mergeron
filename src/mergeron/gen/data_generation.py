@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
     from ..core import MGThresholds
 
+from .. import EMPTY_ARRAYBIGINT
 from .. import EMPTY_ARRAYBOOLEAN
 from .. import NTHREADS
 from .. import PKG_NAME
@@ -561,25 +562,26 @@ def _markets_sampler(
     _market_sample: MarketSample,
     /,
     *,
-    sample_size: tuple[float, int],
+    sample_size: int | tuple[float, int],
     seed_data: SeedSequenceData,
     nthreads: int,
 ) -> MarketsData:
     """
     Generate share, diversion ratio, price, and margin data for MarketSpec.
 
-    The optional keyword arguments are present to allow parallel generation of
-    enforcement counts over a subsets of the sample without saving the generated data.
+    This function is called within a parallel context. The keyword arguments are specific
+    to the subset of the sample in each of the parallel operations.
 
     sample_size:
         Number of draws to generate. If a tuple, the first element is the
-        final sample size, while the second number is the initial sample size.
+        multiplier determining the initial sample size, while the second number is
+        the final sample size.
 
     seed_data:
         Seed data to ensure independent and replicable draws.
 
     nthreads:
-        Number of parallel threads to use.
+        Number of parallel threads to use for random number generation.
 
 
     Returns
@@ -588,7 +590,9 @@ def _markets_sampler(
     in the sample
 
     """
-    _shr_scale, _final_ssz = sample_size
+    _shr_scale, _final_ssz = (
+        (1.0, sample_size) if isinstance(sample_size, int) else sample_size
+    )
     _shr_ssz = int(_shr_scale * _final_ssz)
 
     # Generate share data
@@ -622,8 +626,8 @@ def _markets_sampler(
         del mnl_test_rows
 
     if (
-        not _market_sample.hmt_flag
-        or _market_sample.share_spec.distribution == SHRDistribution.UNI
+        _market_sample.share_spec.distribution == SHRDistribution.UNI
+        or not _market_sample.hmt_flag
     ):
         return MarketsData(
             shares=mktshr_array[:_final_ssz],
@@ -632,25 +636,47 @@ def _markets_sampler(
             aggregate_choice_probability=aggr_choice_prob[:_final_ssz],
         )
 
-    hmt_mkt_flag, hmt_prod_flag = _recapture_hmt(
+    # Pre-test:
+    # _diversion_ratios = compute_merging_firm_diversion_ratios(
+    #     _market_sample.share_spec.recapture_form,
+    #     _market_sample.share_spec.recapture_rate,
+    #     mktshr_array,
+    #     aggr_choice_prob,
+    # )
+
+    _hmt_mkt_flag, _hmt_prod_flags = _recapture_hmt(
         _market_sample.hmt_flag, mktshr_array, aggr_choice_prob, price_array, pcm_array
     )
 
     if _market_sample.hmt_flag.recompute_shares:
-        mktshr_array_hmt = np.divide(
-            _mr := mktshr_array * hmt_prod_flag, _ma := np.einsum("ij->i", _mr)[:, None]
+        mktshr_array_hmt, aggr_choice_prob_hmt = (
+            np.divide(
+                _mr := mktshr_array * _hmt_prod_flags,
+                _ma := np.einsum("ij->i", _mr)[:, None],
+            ),
+            aggr_choice_prob * _ma,
         )
-        aggr_choice_prob_hmt = aggr_choice_prob * _ma
+
+        # Pre-test:
+        # _diversion_ratios_hmt = compute_merging_firm_diversion_ratios(
+        #     _market_sample.share_spec.recapture_form,
+        #     _market_sample.share_spec.recapture_rate,
+        #     mktshr_array_hmt,
+        #     aggr_choice_prob_hmt,
+        # )
+
+        # Test:
+        # if not np.allclose(_diversion_ratios, _diversion_ratios_hmt):
+        #     raise ValueError("Market definition analysis is incorrect.")
     else:
-        mktshr_array_hmt = mktshr_array
-        aggr_choice_prob_hmt = aggr_choice_prob
+        mktshr_array_hmt, aggr_choice_prob_hmt = mktshr_array, aggr_choice_prob
     del mktshr_array
 
     return MarketsData(
-        shares=mktshr_array_hmt[hmt_mkt_flag][:_final_ssz],
-        margins=pcm_array[hmt_mkt_flag][:_final_ssz],
-        prices=price_array[hmt_mkt_flag][:_final_ssz],
-        aggregate_choice_probability=aggr_choice_prob_hmt[hmt_mkt_flag][:_final_ssz],
+        shares=mktshr_array_hmt[_hmt_mkt_flag][:_final_ssz],
+        margins=pcm_array[_hmt_mkt_flag][:_final_ssz],
+        prices=price_array[_hmt_mkt_flag][:_final_ssz],
+        aggregate_choice_probability=aggr_choice_prob_hmt[_hmt_mkt_flag][:_final_ssz],
     )
 
 
@@ -867,7 +893,7 @@ def _sim_enf_cnts_ll(
     ]
 
     return UPPTestsCounts(*[
-        (ArrayBIGINT([]) if not _g.any() else compute_enforcement_counts(_g, _h))
+        (EMPTY_ARRAYBIGINT if not _g.any() else compute_enforcement_counts(_g, _h))
         for _g, _h in zip(
             _res_list_stacks, (StatsGroup.FC, StatsGroup.DL, StatsGroup.HD), strict=True
         )
