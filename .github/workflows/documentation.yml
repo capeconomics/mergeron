@@ -49,4 +49,4 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: |
-            deploy --name mergeron --assets ./docs/build --compatibility-date 2026-04-20
+            deploy --name mergeron --assets ./docs/build --compatibility-date 2026-05-19
