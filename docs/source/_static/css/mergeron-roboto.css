@@ -1,0 +1,17 @@
+@font-face {
+    font-family: "Roboto";
+    src: url("../webfonts/Roboto-VariableFont_wdth_wght.ttf") format("truetype-variations");
+    font-weight: 125 950;
+    font-stretch: 75% 125%;
+
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Roboto";
+    src: url("../webfonts/Roboto-Italic-VariableFont_wdth_wght.ttf") format("truetype-variations");
+    font-weight: 125 950;
+    font-stretch: 75% 125%;
+
+    font-style: italic;
+}
