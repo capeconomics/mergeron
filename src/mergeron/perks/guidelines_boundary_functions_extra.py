@@ -230,9 +230,9 @@ def diversion_share_boundary_distance(
     Share combinations for the share-ratio boundaries using various aggregators.
 
     Reimplements the arithmetic-averages and distance estimations from function,
-    `diversion_share_boundary_wtd_avg` but uses the Minkowski-distance function,
+    `.core.guidelines_boundary_functions.diversion_share_boundary_wtd_avg` but uses the Minkowski-distance function,
     `scipy.spatial.distance.minkowski` for all aggregators. This reimplementation
-    is useful for testing the output of `diversion_share_boundary_wtd_avg`
+    is useful for testing the output of `.core.guidelines_boundary_functions.diversion_share_boundary_wtd_avg`
     but runs considerably slower.
 
     Parameters

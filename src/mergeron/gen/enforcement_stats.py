@@ -93,7 +93,7 @@ def enforcement_counts_observed(
     _stats_group
         grouping measure
     _enf_spec
-        enforcement specification (see, :class:`mergeron.gen.INVResolution`)
+        enforcement specification (see, :class:`.INVResolution`)
 
     Returns
     -------

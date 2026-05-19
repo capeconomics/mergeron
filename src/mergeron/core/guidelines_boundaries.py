@@ -313,9 +313,9 @@ class DiversionBoundary:
             )
         elif self.recapture_form == RECForm.OUTIN:
             raise NotImplementedError(
-                "Diversion-share boundary construction for `mergeron.RECForm.OUTIN` is not implemented. "
-                "Please use `mergeron.RECForm.INOUT` and specify the recapture rate of "
-                "the smaller merging-firm's product as `recapture_rate`."
+                "Diversion-share boundary construction for :attr:`mergeron.RECForm.OUTIN` is not implemented. "
+                "Please use :attr:`mergeron.RECForm.INOUT` and specify the recapture rate of "
+                "the smaller merging-firm's product as :attr:`recapture_rate`."
             )
         elif self.recapture_form is None:
             object.__setattr__(self, "recapture_form", RECForm.INOUT)

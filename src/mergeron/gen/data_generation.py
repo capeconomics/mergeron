@@ -304,7 +304,7 @@ class MarketSample:
             }),
         )
 
-    def compute_enforcement_counts(
+    def test_enforcement(
         self, _enf_parm_vec: MGThresholds, _upp_test_regime: UPPTestRegime, /
     ) -> None:
         """Populate :attr:`enforcement_counts` with estimated UPP test counts.
@@ -817,14 +817,6 @@ def _sim_enf_cnts_ll(
     /,
 ) -> UPPTestsCounts:
     """Parallelize data-generation and testing.
-
-    The parameters `_sim_enf_cnts_kwargs` are passed unaltered to
-    the parent function, `sim_enf_cnts()`, except that, if provided,
-    `seed_data` is used to spawn a seed sequence for each thread,
-    to assure independent samples in each thread, and `nthreads` defines
-    the number of parallel processes used. The number of draws in
-    each thread may be tuned, by trial and error, to the amount of
-    memory (RAM) available.
 
     Parameters
     ----------

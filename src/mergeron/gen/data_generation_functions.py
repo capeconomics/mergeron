@@ -517,18 +517,18 @@ def prices_sampler(
     ----------
     _share_spec
         Enum specifying whether to use asymmetric or flat margins; see
-        :class:`mergeron.gen.ShareSpec`.
+        :class:`.ShareSpec`.
     _pcm_spec
         Enum specifying whether to use asymmetric or flat margins. see
-        :class:`mergeron.gen.PCMSpec`.
+        :class:`.PCMSpec`.
 
     _price_spec
         Enum specifying whether to use symmetric, positive, or negative
-        margins; see :class:`mergeron.gen.PriceSpec`.
+        margins; see :class:`.PriceSpec`.
 
     _hsr_filing_test_type
         Enum specifying restriction, if any, to impose on market data sample
-        to model HSR filing requirements; see :class:`mergeron.gen.HSRFilingTest`.
+        to model HSR filing requirements; see :class:`.HSRFilingTest`.
 
     _market_shares
         Generated market shares.

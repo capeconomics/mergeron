@@ -221,9 +221,9 @@ class SHRDistribution(str, Enameled):
     """Share distribution for merging-firm shares has a higher peak share
 
     By default, shape parameter for merging-firm-share is 2.5, and
-    1.0 for all others. Defining, :attr:`.ShareSpec.parameters`
+    1.0 for all others. Defining, :attr:`ShareSpec.parameters`
     as a vector of shape parameters with length matching
-    that of :attr:`.ShareSpec.parameters` allows flexible specification
+    that of :attr:`ShareSpec.parameters` allows flexible specification
     of Dirichlet-distributed share-data generation.
     """
 
@@ -231,9 +231,9 @@ class SHRDistribution(str, Enameled):
     """Shape parameters for non-merging firms is proportional
 
     Shape parameters for merging-firm-share are given as the first two
-    elements of :attr:`.ShareSpec.parameters`; the shape parameters
+    elements of :attr:`ShareSpec.parameters`; the shape parameters
     for the remaining firms' shares are equiproportional and sum to the
-    third element of :attr:`.ShareSpec.parameters`. See,
+    third element of :attr:`ShareSpec.parameters`. See,
     Balakrishnan [#balakrishnan2006]_ (p. 25).
 
     .. [#balakrishnan2006] Balakrishnan, S. (2006). Continuous Multivariate Distributions.
@@ -301,8 +301,8 @@ class ShareSpec:
 
     Notes
     -----
-    If :attr:`.distribution` == :attr:`.SHRDistribution.UNI`, it is then infeasible that
-    :attr:`.recapture_form` == :attr:`mergeron.RECForm.OUTIN`.
+    If :attr:`distribution` == :attr:`SHRDistribution.UNI`, it is then infeasible that
+    :attr:`recapture_form` == :attr:`mergeron.RECForm.OUTIN`.
     In other words, recapture rates cannot be estimated using
     outside-good choice probabilities if the distribution of markets over firm-counts
     is unspecified.
@@ -333,7 +333,7 @@ class ShareSpec:
 
     ALERT: Firm-count weights are irrelevant when the merging firms' shares are specified
     to have uniform distribution; therefore this attribute is forced to None if
-    :attr:`.distribution` == :attr:`.SHRDistribution.UNI`.
+    :attr:`distribution` == :attr:`SHRDistribution.UNI`.
     """
 
     @firm_counts_weights.default
@@ -355,7 +355,7 @@ class ShareSpec:
     )
     """Parameters for tailoring market-share distribution
 
-    For Uniform distribution, bounds of the distribution; defaults to `(0, 1)`;
+    For Uniform distribution, bounds of the distribution; defaults to :math:`(0, 1)`;
     for Dirichlet-type distributions, a vector of shape parameters of length
     equal to 1 plus the length of firm-count weights below; defaults depend on
     type of Dirichlet-distribution specified.
@@ -515,10 +515,10 @@ class PCMSpec:
     `parameters` is specified as a pair of positive, non-zero shape parameters of
     the standard Beta distribution. Specifying shape parameters :code:`np.array([1, 1])`
     is known equivalent to specifying uniform distribution over
-    the interval :math:`[0, 1]`. If price-cost margins are specified as having
+    the interval :math:`[0, 1)`. If price-cost margins are specified as having
     Bounded-Beta distribution, `parameters` is specified as
     the tuple, (`mean`, `std deviation`, `min`, `max`), where `min` and `max`
-    are lower- and upper-bounds respectively within the interval :math:`[0, 1]`.
+    are lower- and upper-bounds respectively within the interval :math:`[0, 1)`.
 
     """
 
@@ -538,8 +538,8 @@ class PCMSpec:
     )
     """Parameter specification for tailoring PCM distribution
 
-    For Uniform distribution, bounds of the distribution; defaults to `(0, 1)`;
-    for Beta distribution, shape parameters, defaults to `(1, 1)`;
+    For Uniform distribution, bounds of the distribution; defaults to :code:`(0, 1)`;
+    for Beta distribution, shape parameters, defaults to :code:`(1, 1)`;
     for Bounded-Beta distribution, vector of (min, max, mean, std. deviation), non-optional;
     for Empirical distribution, the converter functions supplies a computed data structure
     """
@@ -704,6 +704,17 @@ class INVResolution(str, Enameled):
     BOTH = "clearance and enforcement, respectively"
 
 
+@YAML.register_class
+@enum.unique
+class StatsGroup(str, Enameled):
+    """Measure used to summarize investigations data."""
+
+    FC = "ByFirmCount"
+    DL = "ByDelta"
+    HD = "ByHHIandDelta"
+    ZN = "ByConcentrationZone"
+
+
 @frozen
 class UPPTestRegime:
     """Configuration for UPP tests."""
@@ -743,24 +754,14 @@ class UPPTestRegime:
         return self.guppi_aggregator
 
 
-@YAML.register_class
-@enum.unique
-class StatsGroup(str, Enameled):
-    """Measure used to summarize investigations data."""
-
-    FC = "ByFirmCount"
-    DL = "ByDelta"
-    HD = "ByHHIandDelta"
-    ZN = "ByConcentrationZone"
-
-
 @frozen
 class UPPTestsCounts:
     """Counts of markets meeting a specified Guidelines standard.
 
-    The specification includes Guidelines thresholds (:attr:`mergeron.core.MGThresholds`)
+    Here, a Guidelines standard is specified by enforcement thresholds
+    (:attr:`mergeron.core.MGThresholds`)
     as well as a test regime (:attr:`UPPTestRegime`).
-    See, :method:`enforcement_counts.compute_enforcement_counts`().
+    See, :meth:`.data_generation.MarketSample.test_enforcement`.
     """
 
     ByFirmCount: ArrayBIGINT = field(
