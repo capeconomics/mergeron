@@ -1270,7 +1270,7 @@ wheels = [
 
 [[package]]
 name = "mergeron"
-version = "2026.739743.0"
+version = "2026.739755.0"
 source = { editable = "." }
 dependencies = [
     { name = "aenum" },
