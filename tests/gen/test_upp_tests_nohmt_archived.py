@@ -144,7 +144,9 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str, str]) -> None:
                 np.einsum("ij->", _market_shares), float(SAMPLE_SPEC_AUX["sample_size"])
             )
         except AssertionError as _err:
-            print(np.einsum("ij->", _market_shares), "=?", SAMPLE_SPEC_AUX["sample_size"])
+            print(
+                np.einsum("ij->", _market_shares), "=?", SAMPLE_SPEC_AUX["sample_size"]
+            )
             raise _err
 
         # Test aggregate purchase probability
@@ -163,7 +165,9 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str, str]) -> None:
 
         assert_allclose(
             np.einsum("ij->i", divratio_1j)[:, None]
-            + np.divide(1 - _aggr_purch_prob, 1 - _choice_probabilities[:, [_prod_idx]]),
+            + np.divide(
+                1 - _aggr_purch_prob, 1 - _choice_probabilities[:, [_prod_idx]]
+            ),
             np.ones_like(_aggr_purch_prob),
         )
         del divratio_1j, _prod_idx, _choice_probabilities
@@ -208,7 +212,7 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str, str]) -> None:
             del _fcounts, _fcounts_vals, _fcounts_counts
     del _market_shares, _aggr_purch_prob
 
-    market_sample.compute_enforcement_counts(ENFT_THRESHOLDS, ENFT_REGIME)
+    market_sample.test_enforcement(ENFT_THRESHOLDS, ENFT_REGIME)
 
     if (
         market_sample.enforcement_counts.ByDelta[:, 1].sum()

@@ -171,7 +171,7 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str]) -> None:
         del _fcounts, _fcounts_vals
     del _market_shares, _aggr_purch_prob
 
-    market_sample.compute_enforcement_counts(ENFT_THRESHOLDS, ENFT_REGIME)
+    market_sample.test_enforcement(ENFT_THRESHOLDS, ENFT_REGIME)
 
     if (
         market_sample.enforcement_counts.ByFirmCount[:, 1].sum()

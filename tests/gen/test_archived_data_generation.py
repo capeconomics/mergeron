@@ -324,11 +324,13 @@ def test_markets_sampler(
 
         assert_allclose(
             np.einsum("ij->i", divratio_1j)[:, None]
-            + np.divide(1 - _aggr_purch_prob, 1 - _choice_probabilities[:, [_prod_idx]]),
+            + np.divide(
+                1 - _aggr_purch_prob, 1 - _choice_probabilities[:, [_prod_idx]]
+            ),
             np.ones_like(_aggr_purch_prob),
         )
 
-    market_sample.compute_enforcement_counts(ENFT_THRESHOLDS, ENFT_REGIME)
+    market_sample.test_enforcement(ENFT_THRESHOLDS, ENFT_REGIME)
 
     if market_sample.enforcement_counts.ByDelta[:, 1].sum() != _sample_size:
         raise AssertionError(
@@ -343,12 +345,12 @@ def test_markets_sampler(
             market_sample.to_archive(_zaf, save_dataset=True)
 
     if all((
-        (_cds := market_sample.dataset) is None,
+        market_sample.dataset is None,
         (_cec := market_sample.enforcement_counts) is None,
     )):
         raise ValueError(
             "Market sample dataset does not exist. Run .generate_sample() and, "
-            "when applicable, .compute_enforcement_counts() before proceeding."
+            "when applicable, .test_enforcement() before proceeding."
         )
 
     # Load the market sample with generated data and estimated enforcement counts

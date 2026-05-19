@@ -142,7 +142,7 @@ def test_market_sample() -> MarketSample:
     )
 
     start_time = pendulum.now()
-    market_sample.compute_enforcement_counts(_mg_thresholds0, _upp_test_regime0)
+    market_sample.test_enforcement(_mg_thresholds0, _upp_test_regime0)
 
     total_duration = pendulum.now().diff(start_time).total_seconds()
     print(f"Estimations completed in total duration of {total_duration:.6f} secs.")

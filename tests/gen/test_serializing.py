@@ -48,7 +48,7 @@ def test_serialize_by_hand(_sample_size: int, yaml_file_path: Path) -> None:
 
     if _sample_size <= 10**6:
         market_sample.generate_sample()
-    market_sample.compute_enforcement_counts(
+    market_sample.test_enforcement(
         gbl.GuidelinesStandards(2023).presumption, UPPTestRegime()
     )
 
@@ -114,7 +114,7 @@ def test_int_serialize(_sample_size: int, yaml_file_path: Path) -> None:
 
     if _sample_size <= 10**6:
         market_sample.generate_sample()
-    market_sample.compute_enforcement_counts(
+    market_sample.test_enforcement(
         gbl.GuidelinesStandards(2023).presumption, UPPTestRegime()
     )
 

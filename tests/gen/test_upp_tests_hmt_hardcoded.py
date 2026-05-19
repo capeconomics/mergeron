@@ -107,7 +107,7 @@ def test_upp_tests_counts(_spec: dict, _expected: dict) -> None:
         nthreads=8,
     )
     _market_sample.generate_sample()
-    _market_sample.compute_enforcement_counts(ENFT_THRESHOLDS, ENFT_REGIME)
+    _market_sample.test_enforcement(ENFT_THRESHOLDS, ENFT_REGIME)
 
     _market_shares = _market_sample.dataset.shares
     _fcounts = np.einsum("ij->i", _market_shares > 0, dtype="<u8")[:, None]
