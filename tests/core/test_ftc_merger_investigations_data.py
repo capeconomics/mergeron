@@ -205,7 +205,7 @@ def test_invdata(
     _fid_data: INVData = invdata,
 ) -> None:
     invdata_tots = np.einsum(
-        "ij->j", _fid_data[_data_period][_table_type][_table_no].data_array[:, -3:]
+        "ij->j", _fid_data[_data_period][_table_no].data_array[:, -3:]
     )
     invdata_test = np.array([*_test_val, np.sum(_test_val)], int)
 

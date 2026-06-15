@@ -6,7 +6,7 @@ import decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import mpmath  # type: ignore
+import mpmath
 import numpy as np
 import pytest
 from attrs import fields
