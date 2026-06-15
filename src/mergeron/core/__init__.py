@@ -89,7 +89,7 @@ TABLE_TYPES = ("ByHHIandDelta", "ByFirmCount")
 HHI_TABLE_ALL = "Table 3.1"
 FCOUNT_TABLE_ALL = "Table 4.1"
 
-TTL_KEY = 86825
+TOT_KEY = 86825
 HHI_HEADER_DICT = {
     "0 - 1,799": 0,
     "1,800 - 1,999": 1800,
@@ -99,7 +99,7 @@ HHI_HEADER_DICT = {
     "4,000 - 4,999": 4000,
     "5,000 - 6,999": 5000,
     "7,000 - 10,000": 7000,
-    "TOTAL": TTL_KEY,
+    "TOTAL": TOT_KEY,
 }
 DELTA_HEADER_DICT = {
     "0 - 100": 0,
@@ -110,7 +110,7 @@ DELTA_HEADER_DICT = {
     "800 - 1,200": 800,
     "1,200 - 2,500": 1200,
     "2,500 - 5,000": 2500,
-    "TOTAL": TTL_KEY,
+    "TOTAL": TOT_KEY,
 }
 FCOUNT_HEADER_DICT = {
     "2 to 1": 2,
@@ -123,20 +123,19 @@ FCOUNT_HEADER_DICT = {
     "9 to 8": 9,
     "10 to 9": 10,
     "10 +": 11,
-    "TOTAL": TTL_KEY,
+    "TOTAL": TOT_KEY,
 }
 
 
-type INVData = MappingProxyType[
-    str, MappingProxyType[str, MappingProxyType[str, INVTableData]]
-]
-type INVDataDict = dict[str, dict[str, dict[str, INVTableData]]]
+type INVData = MappingProxyType[str, MappingProxyType[str, INVTableData]]
+type INVDataDict = dict[str, dict[str, INVTableData]]
 
 
 @frozen
 class INVTableData:
     """Represents individual table of FTC merger investigations data."""
 
+    table_type: str
     industry_group: str
     additional_evidence: str
     data_array: ArrayBIGINT = field(

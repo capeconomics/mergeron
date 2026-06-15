@@ -15,7 +15,8 @@ from .. import ArrayUINT8
 from .. import Enameled
 from ..core import DELTA_HEADER_DICT
 from ..core import HHI_HEADER_DICT
-from ..core import TTL_KEY
+from ..core import TABLE_TYPES
+from ..core import TOT_KEY
 from ..core import INVData
 from ..core import INVTableData
 from . import INVResolution
@@ -61,7 +62,7 @@ class OtherEvidence(str, Enameled):
 # Parameters and functions to interpolate selected HHI and ΔHHI values
 #   recorded in fractions to ranges of values in points on the HHI scale
 HHI_POST_KNOTS, HHI_DELTA_KNOTS = [
-    np.array([*[_v for _v in _d.values() if _v != TTL_KEY], _u], int)
+    np.array([*[_v for _v in _d.values() if _v != TOT_KEY], _u], int)
     for _d, _u in zip((HHI_HEADER_DICT, DELTA_HEADER_DICT), (10001, 5001), strict=True)
 ]
 hhi_post_ranger, hhi_delta_ranger = (
@@ -106,15 +107,14 @@ def enforcement_counts_observed(
             f"Must be one of, {tuple(_invdata_array_dict.keys())!r}."
         )
 
-    _ndim_in = 2 if _stats_group == StatsGroup.HD else 1
-    _table_type = (
-        _stats_group.value if _stats_group == StatsGroup.FC else StatsGroup.HD.value
-    )
-
-    _data_array_dict_sub = _invdata_array_dict[_data_period][_table_type]
+    _data_array_dict_sub = _invdata_array_dict[_data_period]
+    _table_type = TABLE_TYPES[1] if _stats_group == StatsGroup.FC else TABLE_TYPES[0]
 
     _table_no = table_no_lku(
-        _data_array_dict_sub, _table_industry_group, _table_other_evidence
+        _data_array_dict_sub,
+        _table_type,  # type: ignore[arg-type]
+        _table_industry_group,
+        _table_other_evidence,
     )
 
     _data_array = _data_array_dict_sub[_table_no].data_array
@@ -132,7 +132,7 @@ def enforcement_counts_observed(
         np.hstack([
             _data_array[:, [1]]
             if _stats_group == StatsGroup.DL
-            else _data_array[:, :_ndim_in],
+            else _data_array[:, :-3],
             _data_array[:, stats_kept_indxs],
         ])
     )
@@ -142,6 +142,7 @@ def enforcement_counts_observed(
 
 def table_no_lku(
     _data_array_dict_sub: Mapping[str, INVTableData],
+    _table_type: Literal["ByFirmCount", "ByHHIandDelta"],
     _table_ind_group: IndustryGroup = IndustryGroup.ALL,
     _table_evid_cond: OtherEvidence = OtherEvidence.UNR,
     /,
@@ -163,11 +164,19 @@ def table_no_lku(
             f"Invalid value for industry group, {f'"{_table_ind_group}"'}."
             f"Must be one of {_igl!r}"
         )
+    if _table_type not in (
+        _tgl := [_data_array_dict_sub[_v].table_type for _v in _data_array_dict_sub]
+    ):
+        raise ValueError(
+            f"Invalid value for table type, {f'"{_table_type}"'}."
+            f"Must be one of {_tgl!r}"
+        )
 
     return next(
         _t
         for _t in _data_array_dict_sub
         if all((
+            _data_array_dict_sub[_t].table_type == _table_type,
             _data_array_dict_sub[_t].industry_group == _table_ind_group,
             _data_array_dict_sub[_t].additional_evidence == _table_evid_cond,
         ))

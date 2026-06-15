@@ -4,7 +4,7 @@ description = "Python for analyzing merger enforcement policy"
 authors = [{ name = "Murthy Kambhampaty", email = "smk@capeconomics.com" }]
 readme = "README.rst"
 license = "BSD-3-Clause"
-license-files = ["./docs/source/license.rst"]
+license-files = ["docs/source/license.rst"]
 keywords = [
     "merger enforcement policy",
     "merger guidelines",
@@ -43,6 +43,7 @@ dependencies = [
     "lxml",
     "matplotlib",
     "mpmath",
+    "numpy",
     "python-calamine",
     "ruamel-yaml",
     "scipy",
@@ -51,6 +52,7 @@ dependencies = [
     "urllib3",
     "hdf5plugin",
     "kdepy",
+    "pypdf>=6.13.2",
 ]
 
 [project.urls]
@@ -252,5 +254,8 @@ commands = [
 default-groups = ["dev"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.11.21,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv_build]
+src-layout = true
