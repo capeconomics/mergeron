@@ -1,8 +1,7 @@
 """Methods to load and augment FTC Merger Investigations Data.
 
 Details on downloading and processing the data are provided in
-the private module, :code:`mergeron.core._process_ftc_merger_investigations_data`.
-
+the module, :code:`mergeron.core.process_ftc_merger_investigations_data`.
 
 Notes
 -----
@@ -30,8 +29,8 @@ from . import TABLE_TYPES
 from . import INVData
 from . import INVDataDict
 from . import INVTableData
-from ._process_ftc_merger_investigations_data import _get_table_type
-from ._process_ftc_merger_investigations_data import _parse_invdata
+from .process_ftc_merger_investigations_data import get_table_type
+from .process_ftc_merger_investigations_data import parse_ftc_reports
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -88,7 +87,7 @@ def construct_data(
             invdata_: INVData = YAML.load(_yfh)
         return invdata_
 
-    invdata: INVDataDict = _dict_from_mapping(_parse_invdata())
+    invdata: INVDataDict = _dict_from_mapping(parse_ftc_reports())
 
     # Add some data periods (
     #   only periods ending in 2011, others have few observations and
@@ -119,7 +118,7 @@ def construct_data(
     for data_period in "1996-2003", "1996-2011", "2004-2011":
         invdata_sub_ = invdata[data_period]
         for table_no in (HHI_TABLE_ALL, FCOUNT_TABLE_ALL):
-            _table_type = _get_table_type(table_no)
+            _table_type = get_table_type(table_no)
             aggr_tables_list = [
                 t_
                 for t_ in invdata["1996-2003"]
@@ -169,7 +168,7 @@ def _construct_no_evidence_data(_invdata: INVDataDict, _data_period: str, /) -> 
         for _dtn in _table_nos_map[_evid_cond]:
             invdata_sub_ = _invdata[_data_period]
 
-            _table_type = _get_table_type(_dtn)
+            _table_type = get_table_type(_dtn)
             _stn0 = "Table 4.1" if _table_type == TABLE_TYPES[1] else "Table 3.1"
             _stn1, _stn2 = (_dtn.replace(".X", f".{_i}") for _i in ("1", "2"))
 
@@ -320,7 +319,7 @@ def invdata_build_aggregate_table(
 ) -> INVTableData:
     """Aggregate selected FTC merger investigations data tables within a given time period."""
     hdr_table_no = _aggr_table_list[0]
-    _table_type = _get_table_type(hdr_table_no)
+    _table_type = get_table_type(hdr_table_no)
 
     return INVTableData(
         _table_type,

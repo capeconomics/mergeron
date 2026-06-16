@@ -30,7 +30,7 @@ _HHI_ROW_RE = re.compile(
 _DATA_PERIOD_RE = re.compile(r"(\d{4}) *(-) *(\d{4})")
 
 
-def _parse_invdata() -> INVData:
+def parse_ftc_reports() -> INVData:
     """Parse FTC merger investigations data reports to structured data.
 
     Returns
@@ -53,7 +53,9 @@ def _parse_invdata() -> INVData:
     return _mappingproxy_from_mapping(invdata)
 
 
-def _parse_tables(_invdata: INVDataDict, _invdata_doc: PdfReader) -> INVDataDict:
+def _parse_tables(
+    _invdata: INVDataDict, _invdata_doc: PdfReader, *, print_lines: bool = False
+) -> INVDataDict:
     _doc_title = (
         ", ".join(("Horizontal Merger Investigation Data", "Fiscal Years", "1996-2005"))
         if (_t := _invdata_doc.metadata["/Title"]) == " "  # type: ignore[index]
@@ -69,6 +71,9 @@ def _parse_tables(_invdata: INVDataDict, _invdata_doc: PdfReader) -> INVDataDict
             if table_start:
                 table_ += [line_]
                 if line_.startswith("TOTAL"):
+                    if print_lines:
+                        print("\n".join(table_))
+                        print("\n\n")
                     _invdata[data_period][table_no] = _parse_lines(
                         data_period, table_no, table_
                     )
@@ -82,7 +87,7 @@ def _parse_tables(_invdata: INVDataDict, _invdata_doc: PdfReader) -> INVDataDict
 def _parse_lines(
     _data_period: str, _table_no: str, _table: Sequence[str]
 ) -> INVTableData:
-    _table_type = _get_table_type(_table_no)
+    _table_type = get_table_type(_table_no)
     _igroup = _table[2 if _data_period == "1996-2011" else 3].replace(
         "Pharmaceutical ", "Pharmaceuticals "
     )
@@ -152,28 +157,9 @@ def _parse_lines(
     return INVTableData(_table_type, _igroup, _oevid, array_)
 
 
-def _get_table_type(_table_no: str) -> str:
+def get_table_type(_table_no: str) -> str:
+    """Get table type from table number."""
     return TABLE_TYPES[(int(TABLE_NO_RE.fullmatch(_table_no)[1]) + 1) % 2]  # type: ignore[index]
-
-
-def print_tables(_reader: PdfReader) -> None:
-    """Print tables in pages of FTC merger investigations data report.
-
-    The report is downloaded from the FTC website and loaded with
-    :mod:`pypdf.PdfReader`, with the result as input to this function.
-    """
-    table_start, table_, table_no = False, [], ""
-    for page_ in _reader.pages:
-        for line_ in page_.extract_text().splitlines():
-            if table_start:
-                table_ += [line_]
-                if line_.startswith("TOTAL"):
-                    print(table_no)
-                    print("\n".join(table_))
-                    print("\n\n")
-                    table_start, table_, table_no = False, [], ""
-            elif TABLE_NO_RE.fullmatch(line_):
-                table_start, table_, table_no = True, [line_], line_
 
 
 def _download_invdata(_dl_path: Path = FID_WORK_DIR) -> tuple[str, ...]:
