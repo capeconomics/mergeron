@@ -67,7 +67,7 @@ def test_share_from_guppi(_gv: float, _mv: float, _rv: float, _test_val: float) 
 
 @pytest.mark.parametrize(
     "_test_parms, _test_val",
-    zip(((), (0.045, 1.00, 6 / 7)), (0.075, 5 / 95), strict=True),
+    tuple(zip(((), (0.045, 1.00, 6 / 7)), (0.075, 5 / 95), strict=True)),
 )
 def test_benchmark_shrratio(_test_parms: Sequence[float], _test_val: float) -> None:
     if _test_parms:
@@ -267,10 +267,12 @@ def test_guidelines_thresholds(
 # Test boudnary functions
 @pytest.mark.parametrize(
     "_dhv, _tv",
-    zip(
-        ((0.06, 1.00), (0.06, 0.67), (0.06, 0.30)),
-        (0.0052325581, 0.0112691576, 0.05),
-        strict=True,
+    tuple(
+        zip(
+            ((0.06, 1.00), (0.06, 0.67), (0.06, 0.30)),
+            (0.0052325581, 0.0112691576, 0.05),
+            strict=True,
+        )
     ),
 )
 def test_diversion_ratio_boundary_at_max(_dhv: tuple[float, float], _tv: float) -> None:
@@ -285,10 +287,12 @@ def test_diversion_ratio_boundary_at_max(_dhv: tuple[float, float], _tv: float) 
 
 @pytest.mark.parametrize(
     "_dhv, _tv",
-    zip(
-        ((0.06, 1.00), (0.06, 0.67), (0.06, 0.30)),
-        (0.0052325581, 0.0112691576, 0.05),
-        strict=True,
+    tuple(
+        zip(
+            ((0.06, 1.00), (0.06, 0.67), (0.06, 0.30)),
+            (0.0052325581, 0.0112691576, 0.05),
+            strict=True,
+        )
     ),
 )
 def test_diversion_share_boundary_max(_dhv: tuple[float, float], _tv: float) -> None:

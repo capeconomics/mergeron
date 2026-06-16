@@ -20,8 +20,12 @@ invdata_array_dict = fid.construct_data(
 
 @pytest.mark.parametrize(
     "_stats_group, _test_val",
-    zip(
-        (StatsGroup.FC, StatsGroup.DL), np.array([[573, 132], [780, 173]]), strict=True
+    tuple(
+        zip(
+            (StatsGroup.FC, StatsGroup.DL),
+            np.array([[573, 132], [780, 173]]),
+            strict=True,
+        )
     ),
 )
 def test_enf_stats(_stats_group: StatsGroup, _test_val: ArrayBIGINT) -> None:
