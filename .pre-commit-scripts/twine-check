@@ -1,4 +1,4 @@
 #!/bin/bash
 
 uv build --clear --sdist
-twine check dist/*
+uv check --preview-features check-command

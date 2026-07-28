@@ -1349,7 +1349,7 @@ requires-dist = [
     { name = "matplotlib" },
     { name = "mpmath" },
     { name = "numpy" },
-    { name = "pypdf", specifier = ">=6.13.2" },
+    { name = "pypdf" },
     { name = "python-calamine" },
     { name = "ruamel-yaml" },
     { name = "scipy" },

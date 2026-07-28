@@ -1,261 +1,238 @@
+[build-system]
+build-backend = "uv_build"
+requires = ["uv_build>=0.11.21,<0.13"]
+
 [project]
 name = "mergeron"
-description = "Python for analyzing merger enforcement policy"
-authors = [{ name = "Murthy Kambhampaty", email = "smk@capeconomics.com" }]
-readme = "README.rst"
-license = "BSD-3-Clause"
-license-files = ["docs/source/license.rst"]
-keywords = [
-    "merger enforcement policy",
-    "merger guidelines",
-    "merger screening",
-    "enforcement presumptions",
-    "concentration standards",
-    "diversion ratio",
-    "upward pricing pressure",
-    "GUPPI",
-]
 version = "2026.739782.1"
+description = "Python for analyzing merger enforcement policy"
+readme = "README.rst"
+keywords = [
+  "concentration standards",
+  "diversion ratio",
+  "enforcement presumptions",
+  "GUPPI",
+  "merger enforcement policy",
+  "merger guidelines",
+  "merger screening",
+  "upward pricing pressure",
+]
+license = "BSD-3-Clause"
+license-files = [ "docs/source/license.rst" ]
+authors = [ { name = "Murthy Kambhampaty", email = "smk@capeconomics.com" } ]
 requires-python = ">=3.12,<4.0"
-
 # Classifiers list: https://pypi.org/classifiers/
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: End Users/Desktop",
-    "Intended Audience :: Science/Research",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: End Users/Desktop",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
 ]
-
 dependencies = [
-    "aenum",
-    "attrs",
-    "backports.zstd; python_version < '3.14'",
-    "beautifulsoup4",
-    "certifi",
-    "h5py",
-    "jinja2",
-    "joblib",
-    "lxml",
-    "matplotlib",
-    "mpmath",
-    "numpy",
-    "python-calamine",
-    "ruamel-yaml",
-    "scipy",
-    "sympy",
-    "types-beautifulsoup4",
-    "urllib3",
-    "hdf5plugin",
-    "kdepy",
-    "pypdf>=6.13.2",
+  "aenum",
+  "attrs",
+  "backports-zstd; python_version<'3.14'",
+  "beautifulsoup4",
+  "certifi",
+  "h5py",
+  "hdf5plugin",
+  "jinja2",
+  "joblib",
+  "kdepy",
+  "lxml",
+  "matplotlib",
+  "mpmath",
+  "numpy",
+  "pypdf",
+  "python-calamine",
+  "ruamel-yaml",
+  "scipy",
+  "sympy",
+  "types-beautifulsoup4",
+  "urllib3",
 ]
-
-[project.urls]
-Homepage = "https://software.capeconomics.com/mergeron"
-Repository = "https://github.com/capeconomics/mergeron.git"
-
+urls.Homepage = "https://software.capeconomics.com/mergeron"
+urls.Repository = "https://github.com/capeconomics/mergeron.git"
 
 [dependency-groups]
-doc = [
-    "sphinx",
-    "sphinx-autodoc-typehints",
-    "sphinx-autoapi",
-    "sphinx-immaterial",
-    "linuxdoc",
-    "ipython",
-    "ipython-pygments-lexers",
-    "roman_numerals",
-]
-lint = ["ruff", "mypy", "radon", "xenon"]
+dev = [ "prek", "semver", "twine" ]
 test = [
-    "coverage",
-    "pendulum",
-    "pytest",
-    "pytest-cov",
-    "pytest-xdist",
-    "pytest-sugar",
-    "tox",
-    "pytest-cache",
+  "coverage",
+  "pendulum",
+  "pytest",
+  "pytest-cache",
+  "pytest-cov",
+  "pytest-sugar",
+  "pytest-xdist",
+  "tox",
 ]
-dev = ["prek", "semver", "twine"]
+doc = [
+  "ipython",
+  "ipython-pygments-lexers",
+  "linuxdoc",
+  "roman-numerals",
+  "sphinx",
+  "sphinx-autoapi",
+  "sphinx-autodoc-typehints",
+  "sphinx-immaterial",
+]
+lint = [ "mypy", "radon", "ruff", "xenon" ]
+
+[tool.uv]
+default-groups = [ "dev" ]
+
+[tool.ty.rules]
+all = "ignore"
 
 [tool.ruff]
-
-# Exclude a variety of commonly ignored directories.
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-]
-
-fix = true
-
 # Same as Black.
 line-length = 88
 indent-width = 4
-
-
-[tool.ruff.lint]
-dummy-variable-rgx = "^_+$"
+# Exclude a variety of commonly ignored directories.
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+]
+fix = true
+format.preview = true
+format.indent-style = "space"
+format.quote-style = "double"
+format.line-ending = "lf"
+format.skip-magic-trailing-comma = true
+format.docstring-code-line-length = 60
+format.docstring-code-format = true
 # Borrowed or adapted primarily from,
 #   https://github.com/sphinx-doc/sphinx/blob/master/pyproject.toml
-select = [
-    "D", # docstrings
-    "E", # pycodestyle
-    "F", # Pyflakes
-    "I", # isort
-    "W", # pycodestyle
-    # plugins:
-    "B",    # flake8-bugbear
-    "C4",   # flake8-comprehensions
-    "FURB", # refurb
-    "ICN",  # flake8-import-conventions
-    "NPY",  # NumPy-specific rules
-    "PIE",  # flake8-pie
-    "PL",   # pylint
-    "PTH",  # flake8-use-pathlib
-    "S",    # flake8-bandit
-    "SIM",  # flake8-simplify
-    "TID",  # flake8-tidy-imports
-    "TC",   # flake8-type-checking
-    "UP",   # pyupgrade
-    "RUF",  # ruff-specific
+lint.select = [
+  # plugins:
+  "B",    # flake8-bugbear
+  "C4",   # flake8-comprehensions
+  "D",    # docstrings
+  "E",    # pycodestyle
+  "F",    # Pyflakes
+  "FURB", # refurb
+  "I",    # isort
+  "ICN",  # flake8-import-conventions
+  "NPY",  # NumPy-specific rules
+  "PIE",  # flake8-pie
+  "PL",   # pylint
+  "PTH",  # flake8-use-pathlib
+  "RUF",  # ruff-specific
+  "S",    # flake8-bandit
+  "SIM",  # flake8-simplify
+  "TC",   # flake8-type-checking
+  "TID",  # flake8-tidy-imports
+  "UP",   # pyupgrade
+  "W",    # pycodestyle
 ]
-
-ignore = [
-    # flake-8,
-    "E501", # line length managed per Black formatter rules, ignore tis
-    # flake8-bugbear
-    "B023",    # loop variables in function calls
-    "PLC2801", # dunder calls
-    # flake8-comprehensions
-    "PLR2004", # magic values
-    "PLW3201", # dunder method ... has no special meaning in Python 3
-    # RUF
-    # "RUF052", # leading underscore for "parametric" variables - no reassignment!
-    "RUF067", # we define package/subpackage types and constants in __init__.py files
-    "S404",   # accept subprocess module
-    # flake8-type-checking
-    "TID252", # we use relative imports - repeated patterns, flexible to name-changes
-    # pyupgrade
-    "UP040", # prefer typing.TypeAlias to type keyword due to inconvenience with latter
+lint.ignore = [
+  # flake8-bugbear
+  "B023",    # loop variables in function calls
+  # flake-8,
+  "E501",    # line length managed per Black formatter rules, ignore tis
+  "PLC2801", # dunder calls
+  # flake8-comprehensions
+  "PLR2004", # magic values
+  "PLW3201", # dunder method ... has no special meaning in Python 3
+  # RUF
+  # "RUF052", # leading underscore for "parametric" variables - no reassignment!
+  "RUF067",  # we define package/subpackage types and constants in __init__.py files
+  "S404",    # accept subprocess module
+  # flake8-type-checking
+  "TID252",  # we use relative imports - repeated patterns, flexible to name-changes
+  # pyupgrade
+  "UP040",   # prefer typing.TypeAlias to type keyword due to inconvenience with latter
 ]
-
+lint.dummy-variable-rgx = "^_+$"
+lint.isort.force-single-line = true
+lint.pydocstyle.convention = "numpy"
+lint.pylint.max-args = 16
+lint.pylint.max-branches = 16
+lint.pylint.max-locals = 32
+lint.pylint.max-statements = 80
 # We define package/subpackage types and constants in __init__.py files.
-ruff.strictly-empty-init-modules = false
-
-pydocstyle.convention = "numpy"
-
-isort.force-single-line = true
-
-[tool.ruff.lint.pylint]
-max-args = 16
-max-branches = 16
-max-locals = 32
-max-statements = 80
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = true
-line-ending = "lf"
-preview = true
-
-docstring-code-format = true
-docstring-code-line-length = 60
+lint.ruff.strictly-empty-init-modules = false
 
 [tool.mypy]
-fixed_format_cache = true
-cache_fine_grained = true
-strict = true
-pretty = true
-
+ignore_missing_imports = false
+warn_redundant_casts = true
+warn_unreachable = true
 allow_redefinition_new = true
+local_partial_types = true
+disable_error_code = [ "import-untyped" ]
 strict_equality = true
 strict_equality_for_none = true
+strict = true
+pretty = true
+cache_fine_grained = true
+enable_incomplete_feature = [ "PreciseTupleTypes" ]
+fixed_format_cache = true
 no_implicit_optional = true
-local_partial_types = true
-enable_incomplete_feature = ["PreciseTupleTypes"]
-
-warn_unreachable = true
-warn_redundant_casts = true
-
-ignore_missing_imports = false
 no_implicit_reexport = false
-disable_error_code = ["import-untyped"]
 
-[tool.pytest.ini_options]
-log_auto_indent = "4"
-addopts = [
-    "--import-mode=importlib",
-    "--cov=mergeron",
-    "--cov-report=html:tests/cov_html",
+[tool.pytest]
+ini_options.testpaths = [ "tests" ]
+ini_options.addopts = [
+  "--import-mode=importlib",
+  "--cov=mergeron",
+  "--cov-report=html:tests/cov_html",
 ]
-testpaths = ["tests"]
-filterwarnings = [
-    "all",
-    "ignore::DeprecationWarning:dateutil.tz.tz",
-    "ignore::DeprecationWarning:jinja2.lexer",
-    "ignore::DeprecationWarning:joblib._utils",
-    "ignore::RuntimeWarning:mergeron.core.empirical_margin_distribution",
-    "ignore::RuntimeWarning:mergeron.core.proportions_tests",
-    "ignore::RuntimeWarning:mergeron.gen.data_generation_functions",
-    "ignore::RuntimeWarning:mergeron.gen.enforcement_stats",
-    "ignore::RuntimeWarning:mergeron.gen.upp_tests",
+ini_options.filterwarnings = [
+  "all",
+  "ignore::DeprecationWarning:dateutil.tz.tz",
+  "ignore::DeprecationWarning:jinja2.lexer",
+  "ignore::DeprecationWarning:joblib._utils",
+  "ignore::RuntimeWarning:mergeron.core.empirical_margin_distribution",
+  "ignore::RuntimeWarning:mergeron.core.proportions_tests",
+  "ignore::RuntimeWarning:mergeron.gen.data_generation_functions",
+  "ignore::RuntimeWarning:mergeron.gen.enforcement_stats",
+  "ignore::RuntimeWarning:mergeron.gen.upp_tests",
 ]
-tmp_path_retention_policy = "failed"
-
+ini_options.log_auto_indent = "4"
+ini_options.tmp_path_retention_policy = "failed"
 
 [tool.tox]
-skip_missing_interpreters = true
-isolated_build = true
-
-[tool.tox.env_run_base]
-description = "install pytest in a virtual environment and invoke"
-allowlist_externals = ["uv"]
-commands = [
-    [
-        "uv",
-        "sync",
-        "--active",
-        "--group",
-        "test",
-    ],
-    [
-        "pytest",
-        { replace = "posargs", extend = true },
-    ],
+env_run_base.allowlist_externals = [ "uv" ]
+env_run_base.commands = [
+  [
+    "uv",
+    "sync",
+    "--active",
+    "--group",
+    "test",
+  ],
+  [
+    "pytest",
+    { replace = "posargs", extend = true },
+  ],
 ]
-
-[tool.uv]
-default-groups = ["dev"]
-
-[build-system]
-requires = ["uv_build>=0.11.21,<0.12"]
-build-backend = "uv_build"
+env_run_base.description = "install pytest in a virtual environment and invoke"
+isolated_build = true
 
 [tool.uv_build]
 src-layout = true
