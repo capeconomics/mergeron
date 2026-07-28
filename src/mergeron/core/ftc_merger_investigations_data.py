@@ -167,7 +167,6 @@ def _construct_no_evidence_data(_invdata: INVDataDict, _data_period: str, /) -> 
     ):
         for _dtn in _table_nos_map[_evid_cond]:
             invdata_sub_ = _invdata[_data_period]
-
             _table_type = get_table_type(_dtn)
             _stn0 = "Table 4.1" if _table_type == TABLE_TYPES[1] else "Table 3.1"
             _stn1, _stn2 = (_dtn.replace(".X", f".{_i}") for _i in ("1", "2"))

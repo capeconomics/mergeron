@@ -104,8 +104,8 @@ def hhi_delta_boundary_qdtr(_dh_val: float = 0.01, /) -> GuidelinesBoundaryCalla
 
 
 def diversion_share_boundary_qdtr_wtd_avg(
-    _delta_star: float = 0.075,
-    _r_val: float = DEFAULT_REC,
+    _delta_star: float | MPFloat = 0.075,
+    _r_val: float | MPFloat = DEFAULT_REC,
     /,
     *,
     weighting: Literal["own-share", "cross-product-share"] | None = "own-share",
@@ -217,7 +217,7 @@ def diversion_share_boundary_qdtr_wtd_avg(
 
 
 def diversion_share_boundary_distance(
-    _delta_star: float = 0.075,
+    _delta_star: float | MPFloat = 0.075,
     _r_val: float = DEFAULT_REC,
     /,
     *,
@@ -256,7 +256,7 @@ def diversion_share_boundary_distance(
         Array of share-pairs, area under boundary.
 
     """
-    _delta_star = mpf(f"{_delta_star}")
+    _delta_star, _r_val = (mpf(_v) for _v in (f"{_delta_star}", f"{_r_val}"))
 
     # parameters for iteration
     _s_mid = mp.fdiv(_delta_star, 1 + _delta_star)
@@ -368,8 +368,8 @@ def diversion_share_boundary_distance(
 
 
 def diversion_share_boundary_xact_avg_mp(
-    _delta_star: float = 0.075,
-    _r_val: float = DEFAULT_REC,
+    _delta_star: float | MPFloat = 0.075,
+    _r_val: float | MPFloat = DEFAULT_REC,
     /,
     *,
     recapture_form: Literal["inside-out", "fixed"] = "inside-out",
@@ -422,7 +422,7 @@ def diversion_share_boundary_xact_avg_mp(
         Array of share-pairs, area under boundary, area under boundary.
 
     """
-    _delta_star = mpf(f"{_delta_star}")
+    _delta_star, _r_val = (mpf(_v) for _v in (f"{_delta_star}", f"{_r_val}"))
     _s_mid = _delta_star / (1 + _delta_star)
     _bdry_step_sz = 10**-dps
     _bdry_start = np.array([(_s_mid, _s_mid)])
@@ -516,8 +516,8 @@ def diversion_share_boundary_xact_avg_mp(
 # diversion_share_boundary_wtd_avg_autoroot
 # this function is about half as fast as the manual one! ... and a touch less precise
 def _diversion_share_boundary_wtd_avg_autoroot(
-    _delta_star: float = 0.075,
-    _r_val: float = DEFAULT_REC,
+    _delta_star: float | MPFloat = 0.075,
+    _r_val: float | MPFloat = DEFAULT_REC,
     /,
     *,
     aggregator: Literal[

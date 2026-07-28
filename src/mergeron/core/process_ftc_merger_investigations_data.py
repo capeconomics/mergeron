@@ -21,7 +21,7 @@ from . import INVData
 from . import INVDataDict
 from . import INVTableData
 
-TABLE_NO_RE = re.compile(r"Table\s+(\d+)\s?\.(\d+)")
+TABLE_NO_RE = re.compile(r"Table\s+(\d+)\s?\.(X|\d+)")
 
 _FC_ROW_RE = re.compile(r"((?:\d{1,2} to \d)|(?:10 \+)|TOTAL) ([,\d]+ [,\d]+ [,\d]+)")
 _HHI_ROW_RE = re.compile(
@@ -47,23 +47,23 @@ def parse_ftc_reports() -> INVData:
     for invdata_docname in invdata_docnames:
         invdata_pdf_path = FID_WORK_DIR.joinpath(invdata_docname)
         invdata_doc = PdfReader(invdata_pdf_path)
-        invdata = _parse_tables(invdata, invdata_doc)
+        _parse_tables(invdata, invdata_doc)
         invdata_doc.close()
 
     return _mappingproxy_from_mapping(invdata)
 
 
 def _parse_tables(
-    _invdata: INVDataDict, _invdata_doc: PdfReader, *, print_lines: bool = False
-) -> INVDataDict:
+    invdata: INVDataDict, _invdata_doc: PdfReader, *, print_lines: bool = False
+) -> None:
     _doc_title = (
         ", ".join(("Horizontal Merger Investigation Data", "Fiscal Years", "1996-2005"))
         if (_t := _invdata_doc.metadata["/Title"]) == " "  # type: ignore[index]
         else _t
     )
 
-    data_period = "".join(_DATA_PERIOD_RE.findall(_doc_title)[0])  # type: ignore[arg-type]
-    _invdata[data_period] = {}
+    _data_period = "".join(_DATA_PERIOD_RE.findall(_doc_title)[0])  # type: ignore[arg-type]
+    invdata[_data_period] = {}
 
     table_start, table_, table_no = False, [], ""
     for page_ in _invdata_doc.pages:
@@ -74,14 +74,12 @@ def _parse_tables(
                     if print_lines:
                         print("\n".join(table_))
                         print("\n\n")
-                    _invdata[data_period][table_no] = _parse_lines(
-                        data_period, table_no, table_
+                    invdata[_data_period][table_no] = _parse_lines(
+                        _data_period, table_no, table_
                     )
                     table_start, table_, table_no = False, [], ""
             elif re.fullmatch(r"(Table\s+\d{1,2}\s*\.\d)", line_):
                 table_start, table_, table_no = True, [line_], line_
-
-    return _invdata
 
 
 def _parse_lines(

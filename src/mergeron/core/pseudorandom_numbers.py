@@ -288,8 +288,8 @@ class MultithreadedRNG:
                 case "Uniform":
                     _uni_l, _uni_h = _parameters
                     values[_first:_last] = _rng.uniform(_uni_l, _uni_h, size=_sz)
-                case _:
-                    "Unreachable. The validator would have rejected this as invalid."  # type: ignore[unreachable]
+                # case _:
+                #     "Unreachable. The validator would have rejected this as invalid."
 
         with concurrent.futures.ThreadPoolExecutor(_nthreads) as executor_:
             for _i in range(_nthreads):
