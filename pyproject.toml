@@ -160,6 +160,8 @@ lint.ignore = [
   "PLR2004", # magic values
   "PLW3201", # dunder method ... has no special meaning in Python 3
   # RUF
+  "RUF002",  # ambiguous-unicode-character-docstring",
+  "RUF003",  # ambiguous-unicode-character-comment",
   # "RUF052", # leading underscore for "parametric" variables - no reassignment!
   "RUF067",  # we define package/subpackage types and constants in __init__.py files
   "S404",    # accept subprocess module

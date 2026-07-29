@@ -38,7 +38,6 @@ from .. import zipfile
 from . import SUBSAMPLE_SIZE
 from . import HMTSpec
 from . import HSRFilingTest
-from . import INVResolution  # noqa: F401
 from . import MarketsData
 from . import PCMDistribution
 from . import PCMRestriction

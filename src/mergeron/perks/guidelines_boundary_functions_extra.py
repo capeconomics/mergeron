@@ -378,6 +378,22 @@ def diversion_share_boundary_xact_avg_mp(
     R"""
     Share combinations along the simple average diversion-ratio boundary.
 
+    Parameters
+    ----------
+    _delta_star
+        Diversion share, :math:`\overline{d} / \overline{r}` or :math:`\overline{g} / (m^* \cdot \overline{r})`.
+    _r_val
+        Recapture rate.
+    recapture_form
+        Whether recapture rate is share-proportional ("inside-out") or has fixed
+        value for both merging firms ("fixed").
+    dps
+        Number of decimal places for rounding returned shares.
+
+    Returns
+    -------
+        Array of share-pairs, area under boundary, area under boundary.
+
     Notes
     -----
     An analytical expression for the exact average boundary is derived
@@ -404,22 +420,6 @@ def diversion_share_boundary_xact_avg_mp(
             (s_2 / (1 - s_1)) + (s_1 / (1 - s_2)) - 2 * d_hat, s_2
         )[0]
         symplot(sag, (s_1, 0.0, d_hat / (1 + d_hat)), ylabel=s_2)
-
-    Parameters
-    ----------
-    _delta_star
-        Diversion share, :math:`\overline{d} / \overline{r}` or :math:`\overline{g} / (m^* \cdot \overline{r})`.
-    _r_val
-        Recapture rate.
-    recapture_form
-        Whether recapture rate is share-proportional ("inside-out") or has fixed
-        value for both merging firms ("fixed").
-    dps
-        Number of decimal places for rounding returned shares.
-
-    Returns
-    -------
-        Array of share-pairs, area under boundary, area under boundary.
 
     """
     _delta_star, _r_val = (mpf(_v) for _v in (f"{_delta_star}", f"{_r_val}"))

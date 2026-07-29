@@ -113,8 +113,11 @@ def market_share_sampler(
                 "Recapture rate must be specified for inside-out recapture."
             )
         # treating r_bar as the recapture rate for the smaller merging firm, 1 - π_0,
-        aggregate_choice_probability = (_r := _share_spec.recapture_rate) / (
-            1 - (1 - _r) * _market_shares[:, :2].min(axis=1, keepdims=True)
+        aggregate_choice_probability = ArrayDouble(
+            np.divide(
+                _r := _share_spec.recapture_rate,
+                1 - (1 - _r) * _market_shares[:, :2].min(axis=1, keepdims=True),
+            )
         )
 
     return _market_shares, aggregate_choice_probability
@@ -962,7 +965,7 @@ def _multimodal_resampler(
     _r2: Generator,
     /,
 ) -> NDArray[np.float64]:
-    """Generate multimodal draws on the empirical (margin) distribution. [#_multimodal_resampler]_
+    """Generate multimodal draws [#_multimodal_resampler]_ on the empirical (margin) distribution.
 
     Parameters
     ----------
@@ -987,7 +990,7 @@ def _multimodal_resampler(
     ----------
     .. [#_multimodal_resampler] See, https://kdepy.readthedocs.io/en/latest/examples.html#resampling-from-the-distribution
 
-    """  # noqa: D400
+    """
     return _values[
         _r1.integers(len(_values), size=_ssz)
     ] + _bandwidth * _r2.standard_normal(size=_ssz)
@@ -1010,7 +1013,7 @@ def _beta_located(_mu: float, _sigma: float, /) -> ArrayFloat:
     -------
         shape parameters for Beta distribution
 
-    """  # noqa: RUF002
+    """
     mul = -1 + _mu * (1 - _mu) / (_sigma**2)
     return ArrayFloat([_mu * mul, (1 - _mu) * mul])
 
@@ -1045,15 +1048,15 @@ def beta_located_bound(
     References
     ----------
     .. [#beta] NIST, Beta Distribution. https://www.itl.nist.gov/div898/handbook/eda/section3/eda366h.htm
-    """  # noqa: RUF002
+    """
     _bmu, _bsigma, bmin, bmax = _dist_parms
 
     bmin = bmin if np.isnan(bmin) else np.floor(bmin / frac) * frac
     bmax = bmax if np.isnan(bmax) else np.ceil(bmax / frac) * frac
     bscale = bmax - bmin
-    # return 4-parameter calibration: α, β, loc, scale  # noqa: RUF003
+    # return 4-parameter calibration: α, β, loc, scale
     return ArrayFloat(
         (*_beta_located(_bmu, _bsigma), 0, 1)
-        if np.isnan(_dist_parms[2:]).any or np.array_equal(_dist_parms[2:], [0, 1])
+        if (np.isnan(_dist_parms[2:]).any() or np.array_equal(_dist_parms[2:], [0, 1]))
         else (*_beta_located((_bmu - bmin) / bscale, _bsigma / bscale), bmin, bscale)
     )
