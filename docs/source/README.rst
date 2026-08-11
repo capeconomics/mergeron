@@ -41,11 +41,6 @@ mergeron: Python for analyzing merger enforcement policy
    :alt: Package manager: uv
    :target: https://github.com/astral-sh/uv
 
-.. image:: https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json
-    :alt: Package builder: Poetry
-    :target: https://python-poetry.org/
-
-
 .. image:: https://www.mypy-lang.org/static/mypy_badge.svg
     :alt: Type checker: mypy
     :target: https://mypy-lang.org/
