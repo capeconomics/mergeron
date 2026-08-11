@@ -61,7 +61,7 @@ urls.Homepage = "https://software.capeconomics.com/mergeron"
 urls.Repository = "https://github.com/capeconomics/mergeron.git"
 
 [dependency-groups]
-dev = [ "prek", "semver", "twine" ]
+dev = [ "prek", "semver", ]
 test = [
   "coverage",
   "pendulum",
@@ -84,11 +84,22 @@ doc = [
 ]
 lint = [ "mypy", "radon", "ruff", "xenon" ]
 
-[tool.uv]
-default-groups = [ "dev" ]
-
-[tool.ty.rules]
-all = "ignore"
+[tool.mypy]
+ignore_missing_imports = false
+warn_redundant_casts = true
+warn_unreachable = true
+allow_redefinition_new = true
+local_partial_types = true
+disable_error_code = [ "import-untyped" ]
+strict_equality = true
+strict_equality_for_none = true
+strict = true
+pretty = true
+cache_fine_grained = true
+enable_incomplete_feature = [ "PreciseTupleTypes" ]
+fixed_format_cache = true
+no_implicit_optional = true
+no_implicit_reexport = false
 
 [tool.ruff]
 # Same as Black.
@@ -119,16 +130,21 @@ exclude = [
   "venv",
 ]
 fix = true
-format.preview = true
-format.indent-style = "space"
-format.quote-style = "double"
-format.line-ending = "lf"
-format.skip-magic-trailing-comma = true
-format.docstring-code-line-length = 60
-format.docstring-code-format = true
+
+[tool.ruff.format]
+preview = true
+indent-style = "space"
+quote-style = "double"
+line-ending = "lf"
+skip-magic-trailing-comma = true
+docstring-code-line-length = 60
+docstring-code-format = true
+
+[tool.ruff.lint]
+preview = true
 # Borrowed or adapted primarily from,
 #   https://github.com/sphinx-doc/sphinx/blob/master/pyproject.toml
-lint.select = [
+select = [
   # plugins:
   "B",    # flake8-bugbear
   "C4",   # flake8-comprehensions
@@ -150,7 +166,7 @@ lint.select = [
   "UP",   # pyupgrade
   "W",    # pycodestyle
 ]
-lint.ignore = [
+ignore = [
   # flake8-bugbear
   "B023",    # loop variables in function calls
   # flake-8,
@@ -170,32 +186,16 @@ lint.ignore = [
   # pyupgrade
   "UP040",   # prefer typing.TypeAlias to type keyword due to inconvenience with latter
 ]
-lint.dummy-variable-rgx = "^_+$"
-lint.isort.force-single-line = true
-lint.pydocstyle.convention = "numpy"
-lint.pylint.max-args = 16
-lint.pylint.max-branches = 16
-lint.pylint.max-locals = 32
-lint.pylint.max-statements = 80
+extend-select = ["ANN", "PYI"]
+dummy-variable-rgx = "^_+$"
+isort.force-single-line = true
+pydocstyle.convention = "numpy"
+pylint.max-args = 16
+pylint.max-branches = 16
+pylint.max-locals = 32
+pylint.max-statements = 80
 # We define package/subpackage types and constants in __init__.py files.
-lint.ruff.strictly-empty-init-modules = false
-
-[tool.mypy]
-ignore_missing_imports = false
-warn_redundant_casts = true
-warn_unreachable = true
-allow_redefinition_new = true
-local_partial_types = true
-disable_error_code = [ "import-untyped" ]
-strict_equality = true
-strict_equality_for_none = true
-strict = true
-pretty = true
-cache_fine_grained = true
-enable_incomplete_feature = [ "PreciseTupleTypes" ]
-fixed_format_cache = true
-no_implicit_optional = true
-no_implicit_reexport = false
+ruff.strictly-empty-init-modules = false
 
 [tool.pytest]
 ini_options.testpaths = [ "tests" ]
@@ -219,8 +219,11 @@ ini_options.log_auto_indent = "4"
 ini_options.tmp_path_retention_policy = "failed"
 
 [tool.tox]
-env_run_base.allowlist_externals = [ "uv" ]
-env_run_base.commands = [
+isolated_build = true
+
+[tool.tox.env_run_base]
+allowlist_externals = [ "uv" ]
+commands = [
   [
     "uv",
     "sync",
@@ -233,8 +236,17 @@ env_run_base.commands = [
     { replace = "posargs", extend = true },
   ],
 ]
-env_run_base.description = "install pytest in a virtual environment and invoke"
-isolated_build = true
+description = "install pytest in a virtual environment and invoke"
+package = "wheel"
+
+[tool.ty.rules]
+all = "ignore"
+
+[tool.uv]
+default-groups = [ "dev" ]
+
+[tool.uv.pip]
+no-build = true
 
 [tool.uv_build]
 src-layout = true
