@@ -22,8 +22,6 @@ mergeron: Python for analyzing merger enforcement policy
 
 .. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json
    :target: https://github.com/astral-sh/uv
-.. image:: https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json
-   :target: https://python-poetry.org/
 .. image:: https://www.mypy-lang.org/static/mypy_badge.svg
    :target: https://mypy-lang.org/
 .. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
