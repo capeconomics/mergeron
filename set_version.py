@@ -22,7 +22,7 @@ GIT_CMD = Path("/usr/bin/git")
 
 def _update_version(_update_level: str) -> None:
 
-    _rc = run(  # noqa: S603
+    _rc = run(  # ruff: ignore[subprocess-without-shell-equals-true]
         [GIT_CMD, "status", "-uno"], check=True, stdout=PIPE, stderr=STDOUT, text=True
     )
     if "nothing to commit" not in _rc.stdout:
@@ -46,7 +46,7 @@ def _update_version(_update_level: str) -> None:
     # Update pyproject.toml
     match _update_level:
         case "patch":
-            run([UV_CMD, "version", "--frozen", "--bump", "patch"], check=True)  # noqa: S603
+            run([UV_CMD, "version", "--frozen", "--bump", "patch"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
             _sem_ver = get_pkg_version()
         case "full":
             if compare(_sem_ver, _pkg_ver) <= 0:
@@ -54,7 +54,7 @@ def _update_version(_update_level: str) -> None:
                     f"Package version, {_pkg_ver} at or above version, {_sem_ver}. Perhaps update patch-level."
                 )
 
-            run([UV_CMD, "version", "--frozen", _sem_ver], check=True)  # noqa: S603
+            run([UV_CMD, "version", "--frozen", _sem_ver], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
 
     # Update version number in the package's main constants module, which is the one source of truth within the source code
     pkg_init_path = PKG_SRC_ROOT / "__init__.py"
@@ -67,7 +67,7 @@ def _update_version(_update_level: str) -> None:
     )
 
     # Update lockfile
-    run(  # noqa: S603
+    run(  # ruff: ignore[subprocess-without-shell-equals-true]
         [
             UV_CMD,
             "sync",
@@ -79,28 +79,28 @@ def _update_version(_update_level: str) -> None:
         check=True,
     )
     # Commit, tag and push
-    run(  # noqa: S603
+    run(  # ruff: ignore[subprocess-without-shell-equals-true]
         [
             GIT_CMD,
             "commit",
-            PROJ_DIR / "pyproject.toml",
-            PROJ_DIR / "uv.lock",
+            f"{PROJ_DIR / 'pyproject.toml'}",
+            f"{PROJ_DIR / 'uv.lock'}",
             f"{pkg_init_path}",
-            PROJ_DIR / "docs/source/license.rst",
+            f"{PROJ_DIR / 'docs/source/license.rst'}",
             "-m",
             f'"chore({TSN.to_date_string()}): update version"',
         ],
         check=True,
     )
-    run([GIT_CMD, "push"], check=True)  # noqa: S603
-    run([GIT_CMD, "tag", f"{_sem_ver}"], check=True)  # noqa: S603
-    run([GIT_CMD, "push", "--tags"], check=True)  # noqa: S603
+    run([GIT_CMD, "push"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
+    run([GIT_CMD, "tag", f"{_sem_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
+    run([GIT_CMD, "push", "--tags"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
 
 
 def get_pkg_version() -> str:
     """Get version number of current package."""
-    return run(  # noqa: S603
-        [UV_CMD, "version", "--short"], stdout=PIPE, text=True, check=True
+    return run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        [UV_CMD, "version", "--short"], stdout=PIPE, text=True, check=True, shell=False
     ).stdout.strip()
 
 
