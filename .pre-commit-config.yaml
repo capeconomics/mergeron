@@ -34,4 +34,4 @@ repos:
     - id: uv-build
       name: uv-build
       language: script
-      entry: .pre-commit-scripts/twine-check
+      entry: .pre-commit-scripts/build-check
