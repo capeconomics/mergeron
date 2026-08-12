@@ -151,7 +151,7 @@ def yamlize_attrs(_typ: type, /, *, attr_map: dict[str, type] = PKG_ATTRS_MAP) -
 class Enameled(enum.Enum):
     """Add YAML representer, constructor for enum.Enum."""
 
-    def __str__(self) -> Any:
+    def __str__(self) -> str:
         """Customize the string representation for f-string usage."""
         return f"{self.value}"
 

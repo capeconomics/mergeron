@@ -523,7 +523,7 @@ def _diversion_share_boundary_wtd_avg_autoroot(
     aggregator: Literal[
         "arithmetic mean", "geometric mean", "distance"
     ] = "arithmetic mean",
-    weighting: Literal["own-share", "cross-product-share", None] = "own-share",
+    weighting: Literal["own-share", "cross-product-share"] | None = "own-share",
     recapture_form: Literal["inside-out", "fixed"] = "inside-out",
     dps: int = 5,
 ) -> GuidelinesBoundary:

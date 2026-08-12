@@ -11,6 +11,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Self
 from typing import TypeAlias
 
 import numpy as np
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
 # Need the two-step re-export for sphinx/autoapi
 zipfile = zipfile_conditional
 
-VERSION = "2026.739825.2"
+VERSION = "2026.739840.0"
 
 __version__ = VERSION
 
@@ -139,25 +140,18 @@ class UPPAggregator(str, Enameled):
 class TypedNDArray(np.ndarray):
     """NDArray with type specification."""
 
-    def __new__(  # noqa: D102
+    def __new__(  # ruff: ignore[undocumented-public-method]
         cls,
         _arr: Sequence[
             bool | float | int | MPFloat | Sequence[bool | float | int | MPFloat]
         ]
         | NDArray[np.bool | np.floating | np.integer | np.uint8]
         | MPMatrix,
-        _type: bool
-        | float
-        | int
-        | MPFloat
-        | np.bool
-        | np.floating
-        | np.integer
-        | np.uint8,
+        _type: bool | float | MPFloat | np.bool | np.floating | np.integer | np.uint8,
         /,
         *,
         info: dict[str, Any] | None = None,
-    ) -> TypedNDArray:
+    ) -> Self:
         if not hasattr(_arr, "__len__") or isinstance(_arr, str):
             raise ValueError(f"Invalid first argument, {_arr!r}")
 
@@ -191,7 +185,7 @@ class TypedNDArray(np.ndarray):
         obj.info = info
         return obj
 
-    def __array_finalize__(self, obj: np.ndarray | None) -> None:  # noqa: D105
+    def __array_finalize__(self, obj: np.ndarray | None) -> None:  # ruff: ignore[undocumented-magic-method]
         if obj is None:
             return
         self.info = getattr(obj, "info", None)
@@ -219,9 +213,9 @@ class TypedNDArray(np.ndarray):
 class ArrayBoolean(TypedNDArray):
     """Array of booleans."""
 
-    def __new__(  # noqa: D102
+    def __new__(  # ruff: ignore[undocumented-public-method]
         cls, _arr: Sequence[bool | Sequence[bool]] | NDArray[np.bool_]
-    ) -> ArrayBoolean:
+    ) -> Self:
         return super().__new__(cls, _arr, np.bool).view(cls)
 
 
@@ -229,9 +223,9 @@ class ArrayBoolean(TypedNDArray):
 class ArrayDouble(TypedNDArray):
     """Array of double-precision floats."""
 
-    def __new__(  # noqa: D102
+    def __new__(  # ruff: ignore[undocumented-public-method]
         cls, _arr: Sequence[float | Sequence[float]] | NDArray[np.float64]
-    ) -> ArrayDouble:
+    ) -> Self:
         return super().__new__(cls, _arr, np.float64).view(cls)
 
 
@@ -239,9 +233,9 @@ class ArrayDouble(TypedNDArray):
 class ArrayFloat(TypedNDArray):
     """Array of floats, any precision supported by numpy."""
 
-    def __new__(  # noqa: D102
+    def __new__(  # ruff: ignore[undocumented-public-method]
         cls, _arr: Sequence[float | Sequence[float]] | NDArray[np.floating]
-    ) -> ArrayFloat:
+    ) -> Self:
         _dtype = _arr.dtype if hasattr(_arr, "dtype") else np.float64
         if not np.issubdtype(_dtype, np.floating):
             raise ValueError(f"Array type, {_dtype!r}, is not a float type.")
@@ -252,9 +246,9 @@ class ArrayFloat(TypedNDArray):
 class ArrayBIGINT(TypedNDArray):
     """Array of 64-bit integers."""
 
-    def __new__(  # noqa: D102
+    def __new__(  # ruff: ignore[undocumented-public-method]
         cls, _arr: Sequence[int | Sequence[int]] | NDArray[np.int64]
-    ) -> ArrayBIGINT:
+    ) -> Self:
         return super().__new__(cls, _arr, np.int64).view(cls)
 
 
@@ -262,9 +256,9 @@ class ArrayBIGINT(TypedNDArray):
 class ArrayINT(TypedNDArray):
     """Array of integers, any precision supported by numpy."""
 
-    def __new__(  # noqa: D102
+    def __new__(  # ruff: ignore[undocumented-public-method]
         cls, _arr: Sequence[int | Sequence[int]] | NDArray[np.integer]
-    ) -> ArrayINT:
+    ) -> Self:
         _dtype = _arr.dtype if hasattr(_arr, "dtype") else np.int64
         if not np.issubdtype(_dtype, np.integer):
             raise ValueError(f"Array type, {_dtype!r}, is not an integer type.")
@@ -275,9 +269,9 @@ class ArrayINT(TypedNDArray):
 class ArrayMPFloat(TypedNDArray):
     """Array of arbitrary-precision floats, mpmath.mpf()s."""
 
-    def __new__(  # noqa: D102
+    def __new__(  # ruff: ignore[undocumented-public-method]
         cls, _arr: Sequence[MPFloat | Sequence[MPFloat]] | np.ndarray
-    ) -> ArrayMPFloat:
+    ) -> Self:
         if not hasattr(next(np.asarray(_arr).flat), "mpf_convert_arg"):
             raise ValueError("Data array cannot be converted to ArrayMPFloat.")
         return super().__new__(cls, _arr, np.object_).view(cls)
@@ -287,7 +281,9 @@ class ArrayMPFloat(TypedNDArray):
 class ArrayUINT8(TypedNDArray):
     """Array of 8-bit unsigned integers."""
 
-    def __new__(cls, _arr: NDArray[np.uint8]) -> ArrayUINT8:  # noqa: D102
+    def __new__(  # ruff: ignore[undocumented-public-method]
+        cls, _arr: NDArray[np.uint8]
+    ) -> Self:
         return super().__new__(cls, _arr, np.uint8).view(cls)
 
 

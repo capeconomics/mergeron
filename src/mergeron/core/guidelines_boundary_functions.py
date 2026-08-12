@@ -36,7 +36,7 @@ class DiversionShareBoundaryKeywords(TypedDict, total=False):
     recapture_form: Literal["fixed", "inside-out", "outside-in"]
     dps: int
     aggregator: Literal["arithmetic mean", "geometric mean", "distance", "max", "min"]
-    weighting: Literal["own-share", "cross-product-share", None]
+    weighting: Literal["own-share", "cross-product-share"] | None
 
 
 def dh_area(_delta_bound: float | MPFloat = 0.01, /, *, dps: int = 9) -> float:
@@ -219,7 +219,7 @@ def diversion_share_boundary_wtd_avg(
     aggregator: Literal[
         "arithmetic mean", "geometric mean", "distance"
     ] = "arithmetic mean",
-    weighting: Literal["own-share", "cross-product-share", None] = "own-share",
+    weighting: Literal["own-share", "cross-product-share"] | None = "own-share",
     recapture_form: Literal["fixed", "inside-out", "outside-in"] = "inside-out",
     dps: int = 5,
 ) -> GuidelinesBoundary:
@@ -655,7 +655,7 @@ def _diversion_share_boundary_intcpt(
     *,
     recapture_form: Literal["inside-out", "fixed"],
     aggregator: Literal["arithmetic mean", "geometric mean", "distance"],
-    weighting: Literal["cross-product-share", "own-share", None],
+    weighting: Literal["cross-product-share", "own-share"] | None,
 ) -> float:
     match weighting:
         case "cross-product-share":
@@ -788,7 +788,7 @@ def boundary_plot(
     *,
     mktshare_plot_flag: bool = True,
     mktshare_axes_flag: bool = True,
-    backend: Literal["pgf"] | str | None = "pgf",
+    backend: str | None = "pgf",
 ) -> tuple[figure.Figure, Callable[[mpa.Axes, bool, bool], None]]:
     """Set up basic figure and axes for plots of safe harbor boundaries.
 
