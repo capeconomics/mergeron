@@ -933,8 +933,11 @@ def _margin_resampler_multimodal_multithreaded(
     _kernel_bandwidth = _parms.bandwidth
     _ssz_r, _ssz_c = _ssz
     _iter_count = ceil(_ssz_r / SUBSAMPLE_SIZE)
-    _trunc_flag = _iter_count * SUBSAMPLE_SIZE > _ssz_r
-    _trunc_size = _ssz_r % SUBSAMPLE_SIZE if _trunc_flag else SUBSAMPLE_SIZE
+    _trunc_size = (
+        _ssz_r % SUBSAMPLE_SIZE
+        if (_iter_count * SUBSAMPLE_SIZE) > _ssz_r
+        else SUBSAMPLE_SIZE
+    )
 
     return np.vstack(
         Parallel(backend="threading", n_jobs=min(_nthreads, _iter_count))(
@@ -991,9 +994,9 @@ def _multimodal_resampler(
     .. [#_multimodal_resampler] See, https://kdepy.readthedocs.io/en/latest/examples.html#resampling-from-the-distribution
 
     """
-    return _values[
-        _r1.integers(len(_values), size=_ssz)
-    ] + _bandwidth * _r2.standard_normal(size=_ssz)
+    _m = _values[_r1.integers(len(_values), size=_ssz)]
+    _p = _bandwidth * _r2.standard_normal(size=_ssz)
+    return _m + _p
 
 
 def _beta_located(_mu: float, _sigma: float, /) -> ArrayFloat:
@@ -1025,7 +1028,8 @@ def beta_located_bound(
     Return shape parameters (α, β), :math:`location`, and :math:`scale` for a non-standard beta, given mean, stddev, and range.
 
     Note, however, that we slightly expand the range here to
-    :math:`\left[\max, \min\right] = \left[\mathrm{floor}(\min / 0.1) * 0.1, \mathrm{ceil}(\max / 0.1 ) * 0.1\right]`.
+    :math:`\left[\max, \min\right] = \left[\mathrm{floor}(\min / \phi) * \phi, \mathrm{ceil}(\max / \phi) * \phi\right]`,
+    with :math:`\phi 5` at percent.
     Random variates are generated as :math:`location + scale \cdot \symup{Β}(α, β)`. [#beta]_
 
     Parameters
@@ -1051,8 +1055,8 @@ def beta_located_bound(
     """
     _bmu, _bsigma, bmin, bmax = _dist_parms
 
-    bmin = bmin if np.isnan(bmin) else np.floor(bmin / frac) * frac
-    bmax = bmax if np.isnan(bmax) else np.ceil(bmax / frac) * frac
+    bmin = 0 if np.isnan(bmin) else np.floor(bmin / frac) * frac
+    bmax = 1 if np.isnan(bmax) else np.ceil(bmax / frac) * frac
     bscale = bmax - bmin
     # return 4-parameter calibration: α, β, loc, scale
     return ArrayFloat(
