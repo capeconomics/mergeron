@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 # Need the two-step re-export for sphinx/autoapi
 zipfile = zipfile_conditional
 
-VERSION = "2026.739840.0"
+VERSION = "2026.739840.1"
 
 __version__ = VERSION
 
