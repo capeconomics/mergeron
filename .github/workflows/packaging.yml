@@ -81,7 +81,11 @@ jobs:
     needs:
       - test-package
     runs-on: ubuntu-latest
-
+    environment:
+        name: pypi
+        url: https://pypi.org/p/mergeron
+    permissions:
+        id-token: write # IMPORTANT: mandatory for trusted publishing
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -110,7 +114,7 @@ jobs:
       # - https://docs.astral.sh/uv/guides/publish/
       # - https://github.com/astral-sh/trusted-publishing-examples/blob/main/.github/workflows/release.yml
       # Check that basic features work and we didn't miss to include crucial files
-      - name: Smoke test (wheel)
+      - name: Build check
         run: uv check --preview-features check-command
 
       - name: Publish
