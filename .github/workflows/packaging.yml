@@ -18,6 +18,7 @@ jobs:
         uses: astral-sh/setup-uv@ae62891fec2bb8e7d6c99fc78c9fec3a63790f8d # v10.0.0
         with:
           version: "latest-known"
+          python-version: "3.14"
           activate-environment: true
           enable-cache: false
 
@@ -79,6 +80,7 @@ jobs:
         uses: astral-sh/setup-uv@ae62891fec2bb8e7d6c99fc78c9fec3a63790f8d # v10.0.0
         with:
           version: "latest-known"
+          python-version: "3.14"
           enable-cache: false
 
       - name: Install project dependencies

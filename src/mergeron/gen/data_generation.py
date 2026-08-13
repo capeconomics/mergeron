@@ -351,7 +351,7 @@ class MarketSample:
         save_dataset: bool = False,
     ) -> None:
         """Serialize market sample to Zip archive."""
-        zpath = zipfile.Path(zip_, at=_zipsubdir)  # type: ignore[arg-type,unused-ignore]
+        zpath = zipfile.Path(zip_, at=_zipsubdir)
         name_root = f"{PKG_NAME}_market_sample"
 
         with (zpath / f"{name_root}.yaml").open("w") as _yfh:
@@ -396,7 +396,7 @@ class MarketSample:
         zip_: zipfile.ZipFile, _subdir: str = "", /, *, restore_dataset: bool = False
     ) -> MarketSample:
         """Deserialize market sample from Zip archive."""
-        zpath = zipfile.Path(zip_, at=_subdir)  # type: ignore[arg-type,unused-ignore]
+        zpath = zipfile.Path(zip_, at=_subdir)
         name_root = f"{PKG_NAME}_market_sample"
 
         if not zip_.namelist():
