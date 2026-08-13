@@ -45,7 +45,7 @@ class MGThresholds:
 
     delta: float = 0.10
     fc: np.uint8 = field(
-        default=6,  # type: ignore[arg-type]
+        default=np.ubyte(6),
         converter=np.ubyte,  # type: ignore[misc]
         validator=[validators.gt(np.uint8(0)), validators.instance_of(np.uint8)],
     )
