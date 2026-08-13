@@ -119,8 +119,9 @@ The following is an example of plotting concentration and diversion ratio bounda
     )
 
 
-Boundary plots, typically, are written to PDF with backend="pgf" as the default Matplotlib backend. In Jupyter or Marimo notebooks, use backend="inline" for inline rendering, as below.
-
+Boundary plots are created with Matplotlib and the provided function, :func:`guidelines_boundary_functions()`,
+and written to PDF with backend="pgf" as the default (Matplotlib) backend.
+In Jupyter or Marimo notebooks, use backend="inline" for inline rendering, as below.
 
 .. code-block:: python3
 
@@ -175,11 +176,16 @@ Mathematically, the enforcement boundary based on postmerger HHI contribution is
 
 .. math::
 
-    \begin{equation}
-    \lbrace (s_1, s_2) \mid (s_1 + s_2)^2 = \overline{s}^2 \rbrace \equiv \lbrace (s_1, s_2) \mid (s_1 + s_2) = \overline{s} \rbrace
-    \end{equation}
+    \begin{align}
+        \lbrace (s_1, s_2) \mid (s_1 + s_2)^2 &= (2 \overline{\symup{s}})^2 \rbrace
+        \equiv \lbrace (s_1, s_2) \mid (s_1 + s_2) =  2 \overline{\symup{s}} \rbrace \\
+        \text{with, }
+            \overline{\symup{s}} &\triangleq \left\lceil{(\overline{\symup{H}} + 1 ) / \overline{\symup{H}}}\right\rceil^{-1}
+    \end{align}
 
-The above result is apparent from the boundary plot above, where the enforcement boundary based on postmerger HHI contribution is identical to that based on the combined share, for a combined share of 28.6% corresponding to the 7-to-6 merger from symmetry, *i.e.,* at the enforcement margin under the concentration standards in the 2023 Guidelines. Moreover, the combined-share boundary closely approximates the average diversion ratio boundary, while the ΔHHI boundary and the pre-merger concentration boundary approximate the minimum and maximum diversion ratio boundaries, respectively.  (Each of the minimun and maximum diversion ratio boundaries is also the “dual” of the other around the axis of symmetry.)
+The above result is apparent from the boundary plot above, where the enforcement boundary based on postmerger HHI contribution is identical to that based on the combined share, for a combined share of 28.6% corresponding to the 7-to-6 merger from symmetry, *i.e.,* at the enforcement margin under the concentration standards in the 2023 Guidelines.
+
+Moreover, the combined-share boundary closely approximates the average diversion ratio boundary, while the ΔHHI boundary and the pre-merger concentration boundary approximate the minimum and maximum diversion ratio boundaries, respectively.  (Each of the minimun and maximum diversion ratio boundaries is also the “dual” of the other around the axis of symmetry.)
 
 
 Analyzing FTC Merger Investigations Data
@@ -482,7 +488,7 @@ Relaxing assumptions from MNL demand, re-compute intrinsic enforcement rates as 
 
     On the other hand, when merger enforcement results in effective deterrence, parties only propose presumptively harmful mergers when confident that the presumption is rebutted by the specific facts of their merger. Thus, observed enforcement rates will be *lower* than intrinsic enforcement rates for proposed mergers that screen as presumptively harmful.
 
-    The magnitude of divergence between observed and intrinsic diversion rates is affected not only by the effectiveness of merger screening and deterrence, but also by agency loss aversion, parties' risk tolerance, litigation risk, and, of course, whether the facts in evidence in respective merger investigations likely rebut a presumption.
+    Consequently, divergence between observed and intrinsic diversion rates is determined by the effectiveness of merger screening and deterrence, including whether the facts in evidence in respective merger investigations likely rebut a presumption, litigation risk, agency loss aversion, and parties' risk tolerance.
 
 
 References
