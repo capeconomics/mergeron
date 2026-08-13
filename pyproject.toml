@@ -4,7 +4,7 @@ requires = ["uv_build>=0.11.21,<0.13"]
 
 [project]
 name = "mergeron"
-version = "2026.739840.1"
+version = "2026.739840.2"
 description = "Python for analyzing merger enforcement policy"
 readme = "README.rst"
 keywords = [
