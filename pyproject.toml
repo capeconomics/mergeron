@@ -180,6 +180,7 @@ ignore = [
   "RUF003",  # ambiguous-unicode-character-comment",
   # "RUF052", # leading underscore for "parametric" variables - no reassignment!
   "RUF067",  # we define package/subpackage types and constants in __init__.py files
+  "RUF106",  # rule codes are harder to read but more compact; lookup not too hard
   "S404",    # accept subprocess module
   # flake8-type-checking
   "TID252",  # we use relative imports - repeated patterns, flexible to name-changes
