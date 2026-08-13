@@ -18,6 +18,7 @@ TSN = pendulum.today()
 
 UV_CMD = Path.home() / ".local" / "bin" / "uv"
 GIT_CMD = Path("/usr/bin/git")
+PREK_CMD = Path(__file__).parent / ".venv/bin/prek"
 
 
 def _update_version(_update_level: str) -> None:
@@ -66,7 +67,7 @@ def _update_version(_update_level: str) -> None:
         )
     )
 
-    # Update lockfile
+    # Update pagackages/lockfile
     run(  # ruff: ignore[subprocess-without-shell-equals-true]
         [
             UV_CMD,
@@ -77,7 +78,11 @@ def _update_version(_update_level: str) -> None:
             "--upgrade",
         ],
         check=True,
+        shell=False,
     )
+
+    # Update pre-commit hooks
+    run([PREK_CMD, "update"], check=True, shell=False)  # ruff: ignore[S603]
     # Commit, tag and push
     run(  # ruff: ignore[subprocess-without-shell-equals-true]
         [
@@ -91,10 +96,11 @@ def _update_version(_update_level: str) -> None:
             f'"chore({TSN.to_date_string()}): update version"',
         ],
         check=True,
+        shell=False,
     )
-    run([GIT_CMD, "push"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
-    run([GIT_CMD, "tag", f"{_sem_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
-    run([GIT_CMD, "push", "--tags"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
+    run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
+    run([GIT_CMD, "tag", f"{_sem_ver}"], check=True, shell=False)  # ruff: ignore[S603]
+    run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
 
 
 def get_pkg_version() -> str:
@@ -121,5 +127,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
     _update_version(args.update_level)
