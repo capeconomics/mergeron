@@ -1,121 +1,141 @@
 name: CI
 
 on:
-  push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+    push:
+        tags:
+            - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  lint-package:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
+    lint-package:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
 
-      - name: "Set up Python"
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version-file: "pyproject.toml"
+            - name: "Set up Python"
+              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+              with:
+                  python-version-file: "pyproject.toml"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          activate-environment: true
-          enable-cache: false
-      - name: Install project dependencies
-        run: |
-          uv sync --active --group lint --no-install-project --upgrade
+            - name: Install uv
+              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+              with:
+                  activate-environment: true
+                  enable-cache: false
+            - name: Install project dependencies
+              run: |
+                  uv sync --active --group lint --no-install-project --upgrade
 
-      - name: Run linter
-        run: |
-          ruff check --no-fix ./src
+            - name: Run linter
+              run: |
+                  ruff check --no-fix ./src
 
-      - name: Run type checker
-        run: |
-          mypy ./src
-  test-package:
-    name: >-
-      Test package
-    needs:
-      - lint-package
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
-        python-version:
-          - 3.14
-          - 3.13
-          - 3.12
+            - name: Run type checker
+              run: |
+                  mypy ./src
 
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
+    test-package:
+        needs:
+            - lint-package
+        strategy:
+            fail-fast: false
+            matrix:
+                os:
+                    - ubuntu-latest
+                    - macos-latest
+                    - windows-latest
+                python-version:
+                    - 3.14
+                    - 3.13
+                    - 3.12
+        runs-on: ${{ matrix.os }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
 
-      - name: "Set up Python"
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
+            - name: "Set up Python"
+              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+              with:
+                  python-version: ${{ matrix.python-version }}
+                  check-latest: true
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          activate-environment: true
-          enable-cache: false
+            - name: Install uv
+              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+              with:
+                  activate-environment: true
+                  enable-cache: false
 
-      - name: Run tests
-        run: |
-          uvx tox
+            - name: Run tests
+              run: |
+                  uvx tox
 
-  build-package:
-    name: >-
-      Build package
-    needs:
-      - test-package
-    runs-on: ubuntu-latest
-    environment:
-        name: pypi
-        url: https://pypi.org/p/mergeron
-    permissions:
-        id-token: write # IMPORTANT: mandatory for trusted publishing
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
+    build-package:
+        needs:
+            - test-package
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
 
-      - name: "Set up Python"
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version-file: "pyproject.toml"
+            - name: "Set up Python"
+              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+              with:
+                  python-version-file: "pyproject.toml"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          activate-environment: false
-          enable-cache: false
+            - name: Install uv
+              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+              with:
+                  activate-environment: false
+                  enable-cache: false
 
-      - name: Install project dependencies
-        run: |
-          uv sync --no-default-groups --no-install-project
+            - name: Install project dependencies
+              run: |
+                  uv sync --no-default-groups --no-install-project
 
-      - name: Build and store the package
-        run: uv build
+            - name: Build and store the package
+              run: uv build
 
-      # Publish with uv publish:
-      # - https://docs.astral.sh/uv/guides/publish/
-      # - https://github.com/astral-sh/trusted-publishing-examples/blob/main/.github/workflows/release.yml
-      # Check that basic features work and we didn't miss to include crucial files
-      - name: Build check
-        run: uv check --preview-features check-command
+            # Publish with uv publish:
+            # - https://docs.astral.sh/uv/guides/publish/
+            # - https://github.com/astral-sh/trusted-publishing-examples/blob/main/.github/workflows/release.yml
+            # Check that basic features work and we didn't miss to include crucial files
+            - name: Build check
+              run: uv check --preview-features check-command
 
-      - name: Publish
-        run: uv publish
+            - name: Upload distributions as artifacts
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              with:
+                  name: dist
+                  path: dist/
+
+    publish-package:
+        needs:
+            - build-package
+        runs-on: ubuntu-latest
+        environment:
+            name: pypi
+        permissions:
+            id-token: write # IMPORTANT: mandatory for trusted publishing
+        steps:
+            - name: Install uv
+              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+              with:
+                  enable-cache: false
+
+            - name: Download distributions artifact
+              uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+              with:
+                  name: dist
+                  path: dist/
+
+            - name: Generate PEP 740 attestations
+              uses: astral-sh/attest-action@f589a42a7efb6fe400b4f400de60b4bc90390027 # v0.0.6
+
+            - name: Publish
+              run: uv publish
