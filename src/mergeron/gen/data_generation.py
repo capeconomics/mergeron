@@ -396,7 +396,7 @@ class MarketSample:
         zip_: zipfile.ZipFile, _subdir: str = "", /, *, restore_dataset: bool = False
     ) -> MarketSample:
         """Deserialize market sample from Zip archive."""
-        zpath = zipfile.Path(zip_, at=_subdir)
+        zpath = zipfile.Path(zip_, at=_subdir)  # type: ignore[arg-type,unused-ignore]
         name_root = f"{PKG_NAME}_market_sample"
 
         if not zip_.namelist():
