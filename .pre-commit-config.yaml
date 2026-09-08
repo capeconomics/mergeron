@@ -16,12 +16,12 @@ repos:
   hooks:
     - id: ruff-check
       name: Run ruff check
-      entry: uv run ruff check src/
+      entry: ruff check src/
       language: system
       types_or: [ python, pyi, jupyter, pyproject ]
     - id: ruff-format
       name: Run ruff format
-      entry: uv run ruff format src/
+      entry: ruff format src/
       language: system
       types_or: [ python, pyi, jupyter ]
     - id: mypy
