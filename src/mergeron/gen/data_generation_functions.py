@@ -1017,19 +1017,19 @@ def _beta_located(_mu: float, _sigma: float, /) -> ArrayFloat:
         shape parameters for Beta distribution
 
     """
-    mul = -1 + _mu * (1 - _mu) / (_sigma**2)
-    return ArrayFloat([_mu * mul, (1 - _mu) * mul])
+    _mul = -1 + _mu * (1 - _mu) / (_sigma**2)
+    return ArrayFloat([_mu * _mul, (1 - _mu) * _mul])
 
 
 def beta_located_bound(
     _dist_parms: ArrayDouble | ArrayFloat, /, *, frac: float = 0.05
 ) -> ArrayFloat:
     R"""
-    Return shape parameters (α, β), :math:`location`, and :math:`scale` for a non-standard beta, given mean, stddev, and range.
+    Given mean, stddev, and range, return shape parameters α and β, with :math:`location` and :math:`scale`.
 
-    Note, however, that we slightly expand the range here to
-    :math:`\left[\max, \min\right] = \left[\mathrm{floor}(\min / \phi) * \phi, \mathrm{ceil}(\max / \phi) * \phi\right]`,
-    with :math:`\phi 5` at percent.
+    Note, however, that we redefine the range for generated random variates to
+    :math:`\left[\max, \min\right] = \left[\lfloor\min / \phi\rfloor * \phi, \lceil\max / \phi\rceil * \phi\right]`,
+    with :math:`\phi` at 5 percent.
     Random variates are generated as :math:`location + scale \cdot \symup{Β}(α, β)`. [#beta]_
 
     Parameters
@@ -1039,15 +1039,17 @@ def beta_located_bound(
 
     Returns
     -------
-        shape parameters for Beta distribution
+        parameters for 4-parameterBeta distribution
 
     Notes
     -----
     For example, ``beta_located_bound(np.array([0.5, 0.2, 0.1, 0.9]))``. Note, with a high variance
-    (:math:`\sigma^2`) or tight range, the relative frequency of extreme values exceeds those in
-    the middle of the range, which is atypical of observed margins. A possible workaround is to set the
-    min and max parameters to :code:`np.nan`, so that the range of margins is determined by
-    the (shape paramters derived from) the mean and standard deviation.
+    (:math:`\sigma^2`) or a tight range, the relative frequency of extreme values exceeds those in
+    the middle of the range, which is atypical of observed margins. A possible workaround is to leave
+    the range unconstrained (by setting min and max parameters to :code:`np.nan`), allowing the range
+    of margins is determined by the (shape paramters derived from the) mean and standard deviation. Here,
+    we expand the range as noted above, which addresses the issue for the empirical margin data
+    of interest.
 
     References
     ----------
@@ -1057,10 +1059,10 @@ def beta_located_bound(
 
     bmin = 0 if np.isnan(bmin) else np.floor(bmin / frac) * frac
     bmax = 1 if np.isnan(bmax) else np.ceil(bmax / frac) * frac
-    bscale = bmax - bmin
+    _bscale = bmax - bmin
     # return 4-parameter calibration: α, β, loc, scale
     return ArrayFloat(
         (*_beta_located(_bmu, _bsigma), 0, 1)
         if (np.isnan(_dist_parms[2:]).any() or np.array_equal(_dist_parms[2:], [0, 1]))
-        else (*_beta_located((_bmu - bmin) / bscale, _bsigma / bscale), bmin, bscale)
+        else (*_beta_located((_bmu - bmin) / _bscale, _bsigma / _bscale), bmin, _bscale)
     )
