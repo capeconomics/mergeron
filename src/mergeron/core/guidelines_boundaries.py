@@ -50,6 +50,55 @@ class GuidelinesStandards:
     or safeharbor, and the imputed presumption is one
     supplied here --- imputed from the (numbers equivalent of) the
     post-merger HHI threshold specified in the Guidelines presumption of harm.
+
+
+    The following python code generates post-merger HHI and ΔHHI for
+    a given number of post-merger firms in the range from 1 to 7 inclusive,
+    for mergers to and from symmetry. Note that under the 2010 Guidelines,
+    5-to-4 merger *to* symmetry fall on the enforcement margin; and under
+    2023 Guidelines, it is 7-to-6 mergers *from* symmetry that fall on
+    the enforcement margin.
+
+    .. code-block:: python
+
+        print(
+            " & ".join([
+                " #",
+                "  Merger to symmetry  ",
+                " Merger from symmetry ",
+            ])
+        )
+        for _l in [
+            [
+                f"{_n:2d}",
+                *[
+                    f"HHI: {1e4 * _f: >5.0f}; ΔHHI: {1e4 * _g: >4.0f}"
+                    for _f, _g in (
+                        (1 / _n, 0.5 / _n**2),
+                        (
+                            (
+                                (_n + 3) / ((_n + 1) ** 2),
+                                2 / (_n + 1) ** 2,
+                            )
+                            if _n > 1
+                            else (1 / _n, 0.5 / _n**2)
+                        ),
+                    )
+                ],
+            ]
+            for _n in range(1, 8)
+        ]:
+            print(" & ".join(_l))
+
+
+    In the 2023 Guidelines, the agencies do not define a
+    negative presumption, or safeharbor. Practically speaking,
+    given resource constraints and loss aversion, it is likely
+    that agency staff focus investigative resources on
+    mergers that meet a presumption;
+    thus, here, the tentative delta safeharbor under
+    the 2023 Guidelines is 100 points.
+
     """
 
     pub_year: PubYear = field(kw_only=False, default=2023)
@@ -89,16 +138,7 @@ class GuidelinesStandards:
     """
 
     def __attrs_post_init__(self, /) -> None:
-        """
-        Initialize Guidelines thresholds, based on Guidelines publication year.
-
-        In the 2023 Guidelines, the agencies do not define a
-        negative presumption, or safeharbor. Practically speaking,
-        given resource constraints and loss aversion, it is likely
-        that staff only investigates mergers that meet the presumption;
-        thus, here, the tentative delta safeharbor under
-        the 2023 Guidelines is 100 points.
-        """
+        """Initialize Guidelines thresholds, given Guidelines publication year."""
         hhi_p, dh_s, dh_p = {
             1992: (0.18, 0.005, 0.01),
             2010: (0.25, 0.01, 0.02),
