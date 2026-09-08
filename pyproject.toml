@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "uv_build"
-requires = ["uv_build>=0.11.21,<0.13"]
+requires = ["uv_build>=0.12.0,<0.13"]
 
 [project]
 name = "mergeron"
@@ -82,7 +82,10 @@ doc = [
   "sphinx-autodoc-typehints",
   "sphinx-immaterial",
 ]
-lint = [ "mypy", "radon", "ruff", "xenon" ]
+lint = [
+ "mypy",
+ "ruff",
+]
 
 [tool.mypy]
 ignore_missing_imports = false
@@ -166,46 +169,49 @@ select = [
   "UP",   # pyupgrade
   "W",    # pycodestyle
 ]
+extend-select = ["ANN", "PYI"]
 ignore = [
   # flake8-bugbear
-  "B023",    # loop variables in function calls
+  "function-uses-loop-variable",
   # flake-8,
-  "E501",    # line length managed per Black formatter rules, ignore tis
-  "PLC2801", # dunder calls
+  "line-too-long",    # line length managed per Black formatter rules, ignore tis
+  "unnecessary-dunder-call", # dunder calls
   # flake8-comprehensions
-  "PLR2004", # magic values
-  "PLW3201", # dunder method ... has no special meaning in Python 3
+  "magic-value-comparison", # an occasional comarison to scalar is unavoidable
+  "bad-dunder-method-name", # dunder method ... has no special meaning in Python 3
   # RUF
-  "RUF002",  # ambiguous-unicode-character-docstring",
-  "RUF003",  # ambiguous-unicode-character-comment",
-  # "RUF052", # leading underscore for "parametric" variables - no reassignment!
-  "RUF067",  # we define package/subpackage types and constants in __init__.py files
-  "RUF106",  # rule codes are harder to read but more compact; lookup not too hard
-  "S404",    # accept subprocess module
+  "ambiguous-unicode-character-docstring",
+  "ambiguous-unicode-character-comment",
+  "non-empty-init-module",  # we define package/subpackage types and constants in __init__.py files
+  "rule-codes-in-suppression-comments",  # rule codes are harder to read but more compact; lookup not too hard
+  "suspicious-subprocess-import",    # accept subprocess module
   # flake8-type-checking
-  "TID252",  # we use relative imports - repeated patterns, flexible to name-changes
+  "relative-imports",  # we use relative imports - repeated patterns, flexible to name-changes
   # pyupgrade
-  "UP040",   # prefer typing.TypeAlias to type keyword due to inconvenience with latter
+  "non-pep695-type-alias",   # prefer typing.TypeAlias to type keyword due to inconvenience with latter
 ]
-extend-select = ["ANN", "PYI"]
+# names with leading underscore for positional arguments and parametric variables (no reassigment)
 dummy-variable-rgx = "^_+$"
+
 isort.force-single-line = true
 pydocstyle.convention = "numpy"
+
 pylint.max-args = 16
 pylint.max-branches = 16
 pylint.max-locals = 32
 pylint.max-statements = 80
+
 # We define package/subpackage types and constants in __init__.py files.
 ruff.strictly-empty-init-modules = false
 
-[tool.pytest]
-ini_options.testpaths = [ "tests" ]
-ini_options.addopts = [
+[tool.pytest.ini_options]
+testpaths = [ "tests" ]
+addopts = [
   "--import-mode=importlib",
   "--cov=mergeron",
   "--cov-report=html:tests/cov_html",
 ]
-ini_options.filterwarnings = [
+filterwarnings = [
   "all",
   "ignore::DeprecationWarning:dateutil.tz.tz",
   "ignore::DeprecationWarning:jinja2.lexer",
@@ -216,14 +222,14 @@ ini_options.filterwarnings = [
   "ignore::RuntimeWarning:mergeron.gen.enforcement_stats",
   "ignore::RuntimeWarning:mergeron.gen.upp_tests",
 ]
-ini_options.log_auto_indent = "4"
-ini_options.tmp_path_retention_policy = "failed"
+log_auto_indent = "4"
+tmp_path_retention_policy = "failed"
 
 [tool.tox]
 isolated_build = true
 
 [tool.tox.env_run_base]
-allowlist_externals = [ "uv" ]
+allowlist_externals = [ "uv", "uv_build", "pytest" ]
 commands = [
   [
     "uv",
@@ -239,6 +245,7 @@ commands = [
 ]
 description = "install pytest in a virtual environment and invoke"
 package = "wheel"
+wheel_build_env = ".pkg"
 
 [tool.ty.rules]
 all = "ignore"

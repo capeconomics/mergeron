@@ -10,7 +10,7 @@ from subprocess import run
 import semver
 
 version_str = run(
-    ["uv", "version"],  # noqa: S607
+    ["uv", "version"],  # ruff: ignore[S607]
     stdout=PIPE,
     text=True,
     check=True,
