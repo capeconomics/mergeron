@@ -12,19 +12,18 @@ repos:
         args: ['--maxkb=16000']
     -   id: check-toml
     -   id: check-yaml
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  # Ruff version.
-  rev: v0.16.6
-  hooks:
-    # Run the linter.
-    - id: ruff-check
-      types_or: [ python, pyi, jupyter, pyproject ]
-      args: [ --no-fix ]
-    # Run the formatter.
-    - id: ruff-format
-      types_or: [ python, pyi, jupyter ]
 - repo: local
   hooks:
+    - id: ruff-check
+      name: Run ruff check
+      entry: uv run ruff check src/
+      language: system
+      types_or: [ python, pyi, jupyter, pyproject ]
+    - id: ruff-format
+      name: Run ruff format
+      entry: uv run ruff format src/
+      language: system
+      types_or: [ python, pyi, jupyter ]
     - id: mypy
       name: mypy
       language: system
