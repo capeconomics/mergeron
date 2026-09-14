@@ -43,20 +43,11 @@ def _update_version(_update_level: str) -> None:
     )
 
     _pkg_ver = get_pkg_version()
-    _upd_ver = semver.Version(TSN.year, TSN.toordinal(), 0)
-
-    # Update pyproject.toml
-    match _update_level:
-        case "patch":
-            run([UV_CMD, "version", "--frozen", "--bump", "patch"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
-            _upd_ver = get_pkg_version()
-        case "full":
-            if semver.compare(_upd_ver, _pkg_ver) <= 0:
-                raise ValueError(
-                    f"Package version, {_pkg_ver} at or above version, {_upd_ver}. Perhaps update patch-level."
-                )
-
-            run([UV_CMD, "version", "--frozen", f"{_upd_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
+    _upd_ver = (
+        semver.Version(TSN.year, TSN.toordinal(), 0)
+        if _update_level == "full"
+        else _pkg_ver.bump_patch()
+    )
 
     # Update version number in the package's main constants module, which is the one source of truth within the source code
     pkg_init_path = PKG_SRC_ROOT / "__init__.py"
@@ -84,6 +75,14 @@ def _update_version(_update_level: str) -> None:
 
     # Update pre-commit hooks
     run([PREK_CMD, "update"], check=True, shell=False)  # ruff: ignore[S603]
+
+    # Update pyproject.toml
+    if semver.compare(_upd_ver, _pkg_ver) <= 0:
+        raise ValueError(
+            f"Package version, {_pkg_ver} at or above version, {_upd_ver}. Perhaps update patch-level."
+        )
+    run([UV_CMD, "version", "--frozen", f"{_upd_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
+
     # Commit, tag and push
     run(  # ruff: ignore[subprocess-without-shell-equals-true]
         [
