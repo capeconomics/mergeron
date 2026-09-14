@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from ..core import EmpiricalMarginData
 
 from .. import EMPTY_ARRAYDOUBLE
-from .. import VERSION
 from .. import ArrayBIGINT
 from .. import ArrayBoolean
 from .. import ArrayDouble
@@ -39,8 +38,6 @@ from . import PriceSpec
 from . import SeedSequenceData
 from . import ShareSpec
 from . import SHRDistribution
-
-__version__ = VERSION
 
 
 def market_share_sampler(

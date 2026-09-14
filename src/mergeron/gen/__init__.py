@@ -27,7 +27,6 @@ if TYPE_CHECKING:
 from .. import DEFAULT_REC
 from .. import EMPTY_ARRAYDOUBLE
 from .. import EMPTY_ARRAYUINT8 as EMPTY_ARRAYUINT8
-from .. import VERSION
 from .. import YAML
 from .. import ArrayBIGINT
 from .. import ArrayBoolean as ArrayBoolean
@@ -43,8 +42,6 @@ from ..core import DEFAULT_BETA_DIST_PARMS
 from ..core import DEFAULT_DIST_PARMS
 from ..core import EmpiricalMarginData
 from ..core.empirical_margin_distribution import margin_data_builder
-
-__version__ = VERSION
 
 SUBSAMPLE_SIZE = int(os.getenv("MERGERON_SUBSAMPLE_SIZE", "100_000"))
 """

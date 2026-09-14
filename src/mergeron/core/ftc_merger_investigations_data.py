@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from .. import EMPTY_ARRAYBIGINT
-from .. import VERSION
 from .. import YAML
 from .. import _dict_from_mapping
 from .. import _mappingproxy_from_mapping
@@ -35,8 +34,6 @@ from .process_ftc_merger_investigations_data import parse_ftc_reports
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from pathlib import Path
-
-__version__ = VERSION
 
 # cspell: "includeRegExpList": ["strings", "comments", /( {3}['"]{3}).*?\\1/g]
 

@@ -8,10 +8,6 @@ unnecessary in routine use of this package.
 
 from importlib import resources
 
-from .. import VERSION
-
-__version__ = VERSION
-
 _data_resources = resources.files(__package__)
 
 DAMODARAN_MARGIN_DATA = _data_resources / "damodaran_margin_data_serialized.zip"

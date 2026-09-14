@@ -14,7 +14,6 @@ from attrs import cmp_using
 from attrs import field
 from attrs import frozen
 
-from .. import VERSION
 from .. import WORK_DIR
 from .. import YAML as YAML
 from .. import ArrayBIGINT
@@ -23,8 +22,6 @@ from .. import ArrayFloat
 from .. import data as mdat
 from .. import yaml_rt_mapper as yaml_rt_mapper
 from .. import yamlize_attrs
-
-__version__ = VERSION
 
 PKG_WORK_DIR = WORK_DIR
 

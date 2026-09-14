@@ -8,7 +8,6 @@ import numpy as np
 from scipy.interpolate import make_interp_spline
 
 from .. import EMPTY_ARRAYBIGINT
-from .. import VERSION
 from .. import YAML
 from .. import ArrayBIGINT
 from .. import ArrayUINT8
@@ -21,8 +20,6 @@ from ..core import INVData
 from ..core import INVTableData
 from . import INVResolution
 from . import StatsGroup
-
-__version__ = VERSION
 
 
 @YAML.register_class

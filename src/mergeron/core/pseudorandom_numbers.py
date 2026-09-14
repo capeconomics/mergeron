@@ -34,15 +34,12 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
 from .. import NTHREADS
-from .. import VERSION
 from .. import YAML
 from .. import ArrayDouble
 from .. import ArrayFloat
 from .. import yaml_rt_mapper
 from . import DEFAULT_BETA_DIST_PARMS
 from . import DEFAULT_DIST_PARMS
-
-__version__ = VERSION
 
 RVDistType: TypeAlias = Literal[
     "Beta", "Dirichlet", "Gaussian", "Normal", "Random", "Uniform"

@@ -55,7 +55,6 @@ from bs4 import BeautifulSoup
 from KDEpy.bw_selection import improved_sheather_jones
 from python_calamine import CalamineWorkbook
 
-from .. import VERSION
 from .. import WORK_DIR as PKG_WORK_DIR
 from .. import YAML
 from .. import ArrayDouble
@@ -63,8 +62,6 @@ from .. import _mappingproxy_from_mapping
 from .. import zipfile
 from . import MGNDATA_ARCHIVE_PATH
 from . import EmpiricalMarginData
-
-__version__ = VERSION
 
 WORK_DIR: Path = globals().get("WORK_DIR", PKG_WORK_DIR)
 """Redefined, in case the user defines WORK_DIR between module imports."""

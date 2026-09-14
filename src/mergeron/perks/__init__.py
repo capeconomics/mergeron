@@ -6,13 +6,10 @@ from typing import TYPE_CHECKING
 
 from attrs import frozen
 
-from .. import VERSION
-from .. import ArrayDouble
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-__version__ = VERSION
+    from .. import ArrayDouble
 
 
 @frozen

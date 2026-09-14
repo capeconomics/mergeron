@@ -10,7 +10,6 @@ from joblib import parallel_config
 from .. import EMPTY_ARRAYBIGINT
 from .. import EMPTY_ARRAYDOUBLE
 from .. import NTHREADS
-from .. import VERSION
 from .. import ArrayBIGINT
 from .. import ArrayDouble
 from .. import ArrayUINT8
@@ -27,8 +26,6 @@ from . import enforcement_stats as esl
 from .data_generation_functions import compute_merging_firm_diversion_ratios
 from .enforcement_stats import StatsGroup
 from .enforcement_stats import compute_enforcement_counts
-
-__version__ = VERSION
 
 
 def compute_upp_test_counts(

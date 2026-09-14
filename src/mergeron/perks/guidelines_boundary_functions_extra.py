@@ -21,14 +21,10 @@ from sympy import solve
 from sympy import symbols
 
 from .. import DEFAULT_REC
-from .. import VERSION
 from .. import MPFloat
 from ..core import GuidelinesBoundary
 from ..core import guidelines_boundary_functions as gbf
 from . import GuidelinesBoundaryCallable
-
-__version__ = VERSION
-
 
 mp.dps = 32
 mp.trap_complex = True

@@ -27,7 +27,6 @@ from .. import EMPTY_ARRAYBIGINT
 from .. import EMPTY_ARRAYBOOLEAN
 from .. import NTHREADS
 from .. import PKG_NAME
-from .. import VERSION
 from .. import YAML
 from .. import ArrayBIGINT
 from .. import ArrayBoolean
@@ -53,8 +52,6 @@ from .data_generation_functions import prices_sampler
 from .enforcement_stats import StatsGroup
 from .enforcement_stats import compute_enforcement_counts
 from .upp_tests import compute_upp_test_counts
-
-__version__ = VERSION
 
 
 def _seed_data_conv(

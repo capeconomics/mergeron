@@ -20,7 +20,6 @@ from attrs import validators
 from mpmath import mp
 
 from .. import DEFAULT_REC
-from .. import VERSION
 from .. import YAML
 from .. import ArrayDouble
 from .. import RECForm
@@ -29,9 +28,6 @@ from .. import yamlize_attrs
 from . import MGThresholds
 from . import PubYear
 from . import guidelines_boundary_functions as gbfn
-
-__version__ = VERSION
-
 
 mp.dps = 32
 mp.trap_complex = True

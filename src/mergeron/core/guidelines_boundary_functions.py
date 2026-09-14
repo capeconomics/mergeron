@@ -19,12 +19,10 @@ from mpmath import mpf
 
 from .. import DEFAULT_REC
 from .. import PKG_NAME
-from .. import VERSION
 from .. import ArrayDouble
 from .. import MPFloat
+from .. import __version__ as VERSION
 from . import GuidelinesBoundary
-
-__version__ = VERSION
 
 mp.dps = 32
 mp.trap_complex = True
