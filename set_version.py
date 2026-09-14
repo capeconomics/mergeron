@@ -3,12 +3,14 @@
 
 import argparse
 import re
+import tomllib
 from pathlib import Path
 from subprocess import PIPE
 from subprocess import STDOUT
 from subprocess import run
 
 import pendulum
+from semver import Version
 from semver import compare
 
 PROJ_DIR = Path(__file__).parent
@@ -42,27 +44,27 @@ def _update_version(_update_level: str) -> None:
     )
 
     _pkg_ver = get_pkg_version()
-    _sem_ver = f"{TSN.year}.{TSN.toordinal()}.0"
+    _upd_ver = Version(TSN.year, TSN.toordinal(), 0)
 
     # Update pyproject.toml
     match _update_level:
         case "patch":
             run([UV_CMD, "version", "--frozen", "--bump", "patch"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
-            _sem_ver = get_pkg_version()
+            _upd_ver = get_pkg_version()
         case "full":
-            if compare(_sem_ver, _pkg_ver) <= 0:
+            if compare(_upd_ver, _pkg_ver) <= 0:
                 raise ValueError(
-                    f"Package version, {_pkg_ver} at or above version, {_sem_ver}. Perhaps update patch-level."
+                    f"Package version, {_pkg_ver} at or above version, {_upd_ver}. Perhaps update patch-level."
                 )
 
-            run([UV_CMD, "version", "--frozen", _sem_ver], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
+            run([UV_CMD, "version", "--frozen", f"{_upd_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
 
     # Update version number in the package's main constants module, which is the one source of truth within the source code
     pkg_init_path = PKG_SRC_ROOT / "__init__.py"
     pkg_init_path.write_text(
         re.sub(
-            rf'(?m)^VERSION = "{_pkg_ver}"$',
-            f'VERSION = "{_sem_ver}"',
+            rf'(?m)^__version__ = "{_pkg_ver}"$',
+            f'__version__ = "{_upd_ver}"',
             pkg_init_path.read_text(),
         )
     )
@@ -99,15 +101,15 @@ def _update_version(_update_level: str) -> None:
         shell=False,
     )
     run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
-    run([GIT_CMD, "tag", f"{_sem_ver}"], check=True, shell=False)  # ruff: ignore[S603]
+    run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
     run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
 
 
-def get_pkg_version() -> str:
+def get_pkg_version() -> Version:
     """Get version number of current package."""
-    return run(  # ruff: ignore[subprocess-without-shell-equals-true]
-        [UV_CMD, "version", "--short"], stdout=PIPE, text=True, check=True, shell=False
-    ).stdout.strip()
+    _t = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+
+    return Version(_t["project"]["version"])
 
 
 if __name__ == "__main__":
