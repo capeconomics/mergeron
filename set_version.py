@@ -33,16 +33,6 @@ def _update_version(_update_level: str) -> None:
             "Repository has uncommitted changes. Commit changes before updating package version."
         )
 
-    # Update license
-    _license_path = PROJ_DIR / "docs" / "source" / "license.rst"
-    _license_path.write_text(
-        re.sub(
-            r"Copyright (?P<byr>\d{4})-\d{4} (?P<name>S\. Murthy Kambhampaty)",
-            rf"Copyright \g<byr>-{TSN.year} \g<name>",
-            _license_path.read_text(),
-        )
-    )
-
     _pkg_ver = get_pkg_version()
     _upd_ver = (
         semver.Version(TSN.year, TSN.toordinal(), 0)
@@ -55,6 +45,16 @@ def _update_version(_update_level: str) -> None:
         raise ValueError(
             f"Package version, {_pkg_ver} at or above update version, {_upd_ver}. Perhaps update patch-level."
         )
+
+    # Update license
+    _license_path = PROJ_DIR / "docs" / "source" / "license.rst"
+    _license_path.write_text(
+        re.sub(
+            r"Copyright (?P<byr>\d{4})-\d{4} (?P<name>S\. Murthy Kambhampaty)",
+            rf"Copyright \g<byr>-{TSN.year} \g<name>",
+            _license_path.read_text(),
+        )
+    )
 
     # Update pagackages/lockfile
     run(  # ruff: ignore[subprocess-without-shell-equals-true]
@@ -92,10 +92,11 @@ def _update_version(_update_level: str) -> None:
             [
                 GIT_CMD,
                 "commit",
-                f"{PROJ_DIR / 'pyproject.toml'}",
-                f"{PROJ_DIR / 'uv.lock'}",
-                f"{pkg_init_path}",
                 f"{PROJ_DIR / 'docs/source/license.rst'}",
+                f"{PROJ_DIR / 'uv.lock'}",
+                f"{PROJ_DIR / '.pre-commit-config.yaml'}",
+                f"{pkg_init_path}",
+                f"{PROJ_DIR / 'pyproject.toml'}",
                 "-m",
                 f'"chore({TSN.to_date_string()}): update version"',
             ],
