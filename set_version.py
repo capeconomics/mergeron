@@ -50,15 +50,11 @@ def _update_version(_update_level: str) -> None:
         else _pkg_ver.bump_patch()
     )
 
-    # Update version number in the package file
-    pkg_init_path = PKG_SRC_ROOT / "__init__.py"
-    pkg_init_path.write_text(
-        re.sub(
-            rf'(?m)^__version__ = "{_pkg_ver}"$',
-            f'__version__ = "{_upd_ver}"',
-            pkg_init_path.read_text(),
+    # Check that package version is older than update version
+    if _upd_ver <= _pkg_ver:
+        raise ValueError(
+            f"Package version, {_pkg_ver} at or above update version, {_upd_ver}. Perhaps update patch-level."
         )
-    )
 
     # Update pagackages/lockfile
     run(  # ruff: ignore[subprocess-without-shell-equals-true]
@@ -77,36 +73,43 @@ def _update_version(_update_level: str) -> None:
     # Update pre-commit hooks
     run([PREK_CMD, "update"], check=True, shell=False)  # ruff: ignore[S603]
 
-    # Update pyproject.toml
-    if _upd_ver <= _pkg_ver:
-        raise ValueError(
-            f"Package version, {_pkg_ver} at or above version, {_upd_ver}. Perhaps update patch-level."
+    # Update version number in the package file
+    pkg_init_path = PKG_SRC_ROOT / "__init__.py"
+    pkg_init_path.write_text(
+        re.sub(
+            rf'(?m)^__version__ = "{_pkg_ver}"$',
+            f'__version__ = "{_upd_ver}"',
+            pkg_init_path.read_text(),
         )
+    )
+
+    # Update pyproject.toml
     run([UV_CMD, "version", "--frozen", f"{_upd_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
 
     # Commit, tag and push
-    _out = run(  # ruff: ignore[subprocess-without-shell-equals-true]
-        [
-            GIT_CMD,
-            "commit",
-            f"{PROJ_DIR / 'pyproject.toml'}",
-            f"{PROJ_DIR / 'uv.lock'}",
-            f"{pkg_init_path}",
-            f"{PROJ_DIR / 'docs/source/license.rst'}",
-            "-m",
-            f'"chore({TSN.to_date_string()}): update version"',
-        ],
-        shell=False,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if not _out.returncode:
+    try:
+        _out = run(  # ruff: ignore[subprocess-without-shell-equals-true]
+            [
+                GIT_CMD,
+                "commit",
+                f"{PROJ_DIR / 'pyproject.toml'}",
+                f"{PROJ_DIR / 'uv.lock'}",
+                f"{pkg_init_path}",
+                f"{PROJ_DIR / 'docs/source/license.rst'}",
+                "-m",
+                f'"chore({TSN.to_date_string()}): update version"',
+            ],
+            shell=False,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
+        run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
+        run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
+    except CalledProcessError as _e:
         print(_out.stdout)
-        raise CalledProcessError(_out.returncode, _out.args, _out.stdout, _out.stderr)
-    run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
-    run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
-    run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
+        raise _e
 
 
 def get_pkg_version() -> semver.Version:
