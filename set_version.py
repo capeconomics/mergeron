@@ -7,6 +7,7 @@ import tomllib
 from pathlib import Path
 from subprocess import PIPE
 from subprocess import STDOUT
+from subprocess import CalledProcessError
 from subprocess import run
 
 import pendulum
@@ -102,6 +103,7 @@ def _update_version(_update_level: str) -> None:
     )
     if not _out.returncode:
         print(_out.stdout)
+        raise CalledProcessError(_out.returncode, _out.args, _out.stdout, _out.stderr)
     run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
     run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
     run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
