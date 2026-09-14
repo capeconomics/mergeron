@@ -10,8 +10,7 @@ from subprocess import STDOUT
 from subprocess import run
 
 import pendulum
-from semver import Version
-from semver import compare
+import semver
 
 PROJ_DIR = Path(__file__).parent
 PKG_SRC_ROOT: Path = next(PROJ_DIR.glob("src/*/__init__.py")).parent
@@ -44,7 +43,7 @@ def _update_version(_update_level: str) -> None:
     )
 
     _pkg_ver = get_pkg_version()
-    _upd_ver = Version(TSN.year, TSN.toordinal(), 0)
+    _upd_ver = semver.Version(TSN.year, TSN.toordinal(), 0)
 
     # Update pyproject.toml
     match _update_level:
@@ -52,7 +51,7 @@ def _update_version(_update_level: str) -> None:
             run([UV_CMD, "version", "--frozen", "--bump", "patch"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
             _upd_ver = get_pkg_version()
         case "full":
-            if compare(_upd_ver, _pkg_ver) <= 0:
+            if semver.compare(_upd_ver, _pkg_ver) <= 0:
                 raise ValueError(
                     f"Package version, {_pkg_ver} at or above version, {_upd_ver}. Perhaps update patch-level."
                 )
@@ -105,11 +104,11 @@ def _update_version(_update_level: str) -> None:
     run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
 
 
-def get_pkg_version() -> Version:
+def get_pkg_version() -> semver.Version:
     """Get version number of current package."""
     _t = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
-    return Version(_t["project"]["version"])
+    return semver.Version(**semver.parse(_t["project"]["version"]))
 
 
 if __name__ == "__main__":
