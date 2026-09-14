@@ -77,7 +77,7 @@ def _update_version(_update_level: str) -> None:
     run([PREK_CMD, "update"], check=True, shell=False)  # ruff: ignore[S603]
 
     # Update pyproject.toml
-    if semver.compare(_upd_ver, _pkg_ver) <= 0:
+    if _upd_ver <= _pkg_ver:
         raise ValueError(
             f"Package version, {_pkg_ver} at or above version, {_upd_ver}. Perhaps update patch-level."
         )
