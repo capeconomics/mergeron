@@ -293,11 +293,12 @@ def diversion_share_boundary_distance(
                 else _weights_base
             )
 
-            match aggregator:
-                case "arithmetic mean":
-                    delta_test = minkowski((de_1, de_2), (0.0, 0.0), p=1, w=weights_i)
-                case "distance":
-                    delta_test = minkowski((de_1, de_2), (0.0, 0.0), p=2, w=weights_i)
+            delta_test = minkowski(
+                np.array([de_1, de_2], np.float64),
+                (0.0, 0.0),
+                p=1 if aggregator == "arithmetic mean" else 2,
+                w=weights_i,
+            )
 
             _test_flag, _incr_decr = (
                 (delta_test > _delta_star, -1)
