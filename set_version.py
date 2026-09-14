@@ -84,7 +84,7 @@ def _update_version(_update_level: str) -> None:
     run([UV_CMD, "version", "--frozen", f"{_upd_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
 
     # Commit, tag and push
-    run(  # ruff: ignore[subprocess-without-shell-equals-true]
+    _out = run(  # ruff: ignore[subprocess-without-shell-equals-true]
         [
             GIT_CMD,
             "commit",
@@ -95,9 +95,13 @@ def _update_version(_update_level: str) -> None:
             "-m",
             f'"chore({TSN.to_date_string()}): update version"',
         ],
-        check=True,
         shell=False,
+        check=True,
+        capture_output=True,
+        text=True,
     )
+    if not _out.returncode:
+        print(_out.stdout)
     run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
     run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
     run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
