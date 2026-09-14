@@ -49,7 +49,7 @@ def _update_version(_update_level: str) -> None:
         else _pkg_ver.bump_patch()
     )
 
-    # Update version number in the package's main constants module, which is the one source of truth within the source code
+    # Update version number in the package file
     pkg_init_path = PKG_SRC_ROOT / "__init__.py"
     pkg_init_path.write_text(
         re.sub(
