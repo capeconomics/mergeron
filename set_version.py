@@ -96,7 +96,7 @@ def _update_version(_update_level: str) -> None:
             f'"chore({TSN.to_date_string()}): update version"',
         ],
         shell=False,
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
     )
