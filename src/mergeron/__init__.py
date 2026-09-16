@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 # Need the two-step re-export for sphinx/autoapi
 zipfile = zipfile_conditional
 
-__version__ = "2026.739867.6"
+__version__ = "2026.739867.7"
 
 PKG_NAME: str = Path(__file__).parent.name
 
