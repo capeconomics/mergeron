@@ -3,11 +3,11 @@
 
 import argparse
 import re
+import sys
 import tomllib
 from pathlib import Path
 from subprocess import PIPE
 from subprocess import STDOUT
-from subprocess import CalledProcessError
 from subprocess import run
 
 import pendulum
@@ -87,30 +87,26 @@ def _update_version(_update_level: str) -> None:
     run([UV_CMD, "version", "--frozen", f"{_upd_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
 
     # Commit, tag and push
-    try:
-        _out = run(  # ruff: ignore[subprocess-without-shell-equals-true]
-            [
-                GIT_CMD,
-                "commit",
-                f"{PROJ_DIR / 'docs/source/license.rst'}",
-                f"{PROJ_DIR / 'uv.lock'}",
-                f"{PROJ_DIR / '.pre-commit-config.yaml'}",
-                f"{pkg_init_path}",
-                f"{PROJ_DIR / 'pyproject.toml'}",
-                "-m",
-                f'"chore({TSN.to_date_string()}): update version"',
-            ],
-            shell=False,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
-        run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
-        run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
-    except CalledProcessError as _e:
-        print(_out.stdout)
-        raise _e
+    run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        [
+            GIT_CMD,
+            "commit",
+            f"{PROJ_DIR / 'docs/source/license.rst'}",
+            f"{PROJ_DIR / 'uv.lock'}",
+            f"{PROJ_DIR / '.pre-commit-config.yaml'}",
+            f"{pkg_init_path}",
+            f"{PROJ_DIR / 'pyproject.toml'}",
+            "-m",
+            f'"chore({TSN.to_date_string()}): update version"',
+        ],
+        shell=False,
+        check=True,
+        stdout=sys.stdout,
+        text=True,
+    )
+    run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
+    run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
+    run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
 
 
 def get_pkg_version() -> semver.Version:
