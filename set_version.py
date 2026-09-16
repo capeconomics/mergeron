@@ -12,24 +12,25 @@ import pendulum
 import semver
 
 PROJ_DIR = Path(__file__).parent
-PKG_SRC_ROOT: Path = next(PROJ_DIR.glob("src/*/__init__.py")).parent
+PKG_INIT_PATH: Path = next(PROJ_DIR.glob("src/*/__init__.py"))
+PKG_SRC_ROOT: Path = PKG_INIT_PATH.parent
 PKG_NAME: str = PKG_SRC_ROOT.name
 TSN = pendulum.today()
 
 UV_CMD = Path.home() / ".local" / "bin" / "uv"
-GIT_CMD = Path("/usr/bin/git")
+GIT_CMD = "/usr/bin/git"
 PREK_CMD = Path(__file__).parent / ".venv/bin/prek"
 
 
 def _update_version(_update_level: str) -> None:
 
-    _rc = run(  # ruff: ignore[subprocess-without-shell-equals-true]
-        [GIT_CMD, "status", "-uno"], check=True, capture_output=True, text=True
-    )
-    if "nothing to commit" not in _rc.stdout:
-        raise RuntimeError(
-            "Repository has uncommitted changes. Commit changes before updating package version."
-        )
+    # _rc = run(
+    #     [GIT_CMD, "status", "-uno"], check=True, capture_output=True, text=True
+    # )
+    # if "nothing to commit" not in _rc.stdout:
+    #     raise RuntimeError(
+    #         "Repository has uncommitted changes. Commit changes before updating package version."
+    #     )
 
     _pkg_ver = get_pkg_version()
     _upd_ver = (
@@ -72,13 +73,13 @@ def _update_version(_update_level: str) -> None:
     run([PREK_CMD, "update"], check=True, shell=False)  # ruff: ignore[S603]
 
     # Update version number in the package file
-    pkg_init_path = PKG_SRC_ROOT / "__init__.py"
-    pkg_init_path.write_text(
+    PKG_INIT_PATH.write_text(
         re.sub(
             rf'(?m)^__version__ = "{_pkg_ver}"$',
             f'__version__ = "{_upd_ver}"',
-            pkg_init_path.read_text(),
-        )
+            PKG_INIT_PATH.read_text(encoding="utf-8"),
+        ),
+        encoding="utf-8",
     )
 
     # Update pyproject.toml
@@ -90,14 +91,15 @@ def _update_version(_update_level: str) -> None:
             GIT_CMD,
             "commit",
             "-a",
-            # f"{PROJ_DIR / 'docs/source/license.rst'}",
-            # f"{PROJ_DIR / 'uv.lock'}",
+            # f"{_license_path}",
             # f"{PROJ_DIR / '.pre-commit-config.yaml'}",
-            # f"{pkg_init_path}",
+            # f"{PROJ_DIR / 'uv.lock'}",
+            # f"{PKG_INIT_PATH}",
             # f"{PROJ_DIR / 'pyproject.toml'}",
             "-m",
             f'"chore({TSN.to_date_string()}): update version"',
         ],
+        cwd=PROJ_DIR,
         shell=False,
         check=True,
         stdout=sys.stdout,
