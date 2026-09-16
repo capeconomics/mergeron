@@ -6,8 +6,6 @@ import re
 import sys
 import tomllib
 from pathlib import Path
-from subprocess import PIPE
-from subprocess import STDOUT
 from subprocess import run
 
 import pendulum
@@ -26,7 +24,7 @@ PREK_CMD = Path(__file__).parent / ".venv/bin/prek"
 def _update_version(_update_level: str) -> None:
 
     _rc = run(  # ruff: ignore[subprocess-without-shell-equals-true]
-        [GIT_CMD, "status", "-uno"], check=True, stdout=PIPE, stderr=STDOUT, text=True
+        [GIT_CMD, "status", "-uno"], check=True, capture_output=True, text=True
     )
     if "nothing to commit" not in _rc.stdout:
         raise RuntimeError(
@@ -91,11 +89,12 @@ def _update_version(_update_level: str) -> None:
         [
             GIT_CMD,
             "commit",
-            f"{PROJ_DIR / 'docs/source/license.rst'}",
-            f"{PROJ_DIR / 'uv.lock'}",
-            f"{PROJ_DIR / '.pre-commit-config.yaml'}",
-            f"{pkg_init_path}",
-            f"{PROJ_DIR / 'pyproject.toml'}",
+            "-a",
+            # f"{PROJ_DIR / 'docs/source/license.rst'}",
+            # f"{PROJ_DIR / 'uv.lock'}",
+            # f"{PROJ_DIR / '.pre-commit-config.yaml'}",
+            # f"{pkg_init_path}",
+            # f"{PROJ_DIR / 'pyproject.toml'}",
             "-m",
             f'"chore({TSN.to_date_string()}): update version"',
         ],
