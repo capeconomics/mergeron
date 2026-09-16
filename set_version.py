@@ -7,12 +7,10 @@ import tomllib
 from pathlib import Path
 from subprocess import run
 
-import git
 import pendulum
 import semver
 
 PROJ_DIR = Path(__file__).parent
-PROJ_REPO = git.Repo(PROJ_DIR)
 
 PKG_INIT_PATH: Path = next(PROJ_DIR.glob("src/*/__init__.py"))
 PKG_SRC_ROOT: Path = PKG_INIT_PATH.parent
@@ -26,13 +24,17 @@ PREK_CMD = Path(__file__).parent / ".venv/bin/prek"
 
 def _update_version(_update_level: str) -> None:
 
-    # _rc = run(
-    #     [GIT_CMD, "status", "-uno"], check=True, capture_output=True, text=True
-    # )
-    # if "nothing to commit" not in _rc.stdout:
-    #     raise RuntimeError(
-    #         "Repository has uncommitted changes. Commit changes before updating package version."
-    #     )
+    _rc = run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        [GIT_CMD, "status", "-uno"],
+        check=True,
+        capture_output=True,
+        text=True,
+        shell=False,
+    )
+    if "nothing to commit" not in _rc.stdout:
+        raise RuntimeError(
+            "Repository has uncommitted changes. Commit changes before updating package version."
+        )
 
     _pkg_ver = get_pkg_version()
     _upd_ver = (
@@ -81,7 +83,8 @@ def _update_version(_update_level: str) -> None:
         _license_path.write_text(
             _license_pat.sub(rf"Copyright \g<byr>-{TSN.year} \g<name>", _license_text)
         )
-        (PROJ_DIR / "LICENSE").hardlink_to(_license_path)
+        (_p := PROJ_DIR / "LICENSE").unlink()
+        _p.hardlink_to(_license_path)
 
     # Update version number in the package file
     PKG_INIT_PATH.write_text(
