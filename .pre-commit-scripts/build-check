@@ -1,4 +1,3 @@
 #!/bin/bash
 
-uv build --clear --wheel
-uv check --preview-features check-command
+uv check --preview-features check-command && rm dist/mergeron-*
