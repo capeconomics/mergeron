@@ -2,6 +2,7 @@
 """Updates package version number, and commits and tags repository."""
 
 import argparse
+import os
 import re
 import tomllib
 from pathlib import Path
@@ -85,33 +86,25 @@ def _update_version(_update_level: str) -> None:
     run([UV_CMD, "version", "--frozen", f"{_upd_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
 
     # Commit, tag and push
-    # _out = run(  # ruff: ignore[subprocess-without-shell-equals-true]
-    #     [
-    #         GIT_CMD,
-    #         "commit",
-    #         "-a",
-    #         # f"{_license_path}",
-    #         # f"{PROJ_DIR / '.pre-commit-config.yaml'}",
-    #         # f"{PROJ_DIR / 'uv.lock'}",
-    #         # f"{PKG_INIT_PATH}",
-    #         # f"{PROJ_DIR / 'pyproject.toml'}",
-    #         "-m",
-    #         f'"chore({TSN.to_date_string()}): update version"',
-    #     ],
-    #     cwd=PROJ_DIR,
-    #     check=False,
-    #     capture_output=True,
-    #     text=True,
-    # )
-    # if _out.returncode != 0:
-    #     print(_out.stdout)
-    #     raise RuntimeError(_out.stderr)
-    run(
-        ["/usr/bin/git", "commit", "-a", "-m", '"chore(2026-09-16): update version"'],
+    run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        [
+            GIT_CMD,
+            "commit",
+            f"{_license_path}",
+            f"{PROJ_DIR / '.pre-commit-config.yaml'}",
+            f"{PROJ_DIR / 'uv.lock'}",
+            f"{PKG_INIT_PATH}",
+            f"{PROJ_DIR / 'pyproject.toml'}",
+            "-m",
+            f'"chore({TSN.to_date_string()}): update version"',
+        ],
+        env=os.environ.copy(),
+        cwd=PROJ_DIR,
         check=True,
+        shell=False,
     )
-    run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
     run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
+    run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[S603]
     run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
 
 
