@@ -61,7 +61,7 @@ urls.Homepage = "https://software.capeconomics.com/mergeron"
 urls.Repository = "https://github.com/capeconomics/mergeron.git"
 
 [dependency-groups]
-dev = [ "prek", "semver", "gitpython"]
+dev = [ "prek", "semver" ]
 test = [
   "coverage",
   "pendulum",

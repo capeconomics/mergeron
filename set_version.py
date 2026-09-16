@@ -47,17 +47,14 @@ def _update_version(_update_level: str) -> None:
             f"Package version, {_pkg_ver} at or above update version, {_upd_ver}. Perhaps update patch-level."
         )
 
-    # Update license
-    _license_path = PROJ_DIR / "docs" / "source" / "license.rst"
-    _license_path.write_text(
-        re.sub(
-            r"Copyright (?P<byr>\d{4})-\d{4} (?P<name>S\. Murthy Kambhampaty)",
-            rf"Copyright \g<byr>-{TSN.year} \g<name>",
-            _license_path.read_text(),
-        )
+    # Update pagackages/lockfile
+    # Check that package is comaptible with pypi
+    run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        [UV_CMD, "check", "--preview-features", "check-command"],
+        check=True,
+        shell=False,
     )
 
-    # Update pagackages/lockfile
     run(  # ruff: ignore[subprocess-without-shell-equals-true]
         [
             UV_CMD,
@@ -74,6 +71,18 @@ def _update_version(_update_level: str) -> None:
     # Update pre-commit hooks
     run([PREK_CMD, "update"], check=True, shell=False)  # ruff: ignore[S603]
 
+    # Update license
+    _license_path = PROJ_DIR / "docs" / "source" / "license.rst"
+    _license_text = _license_path.read_text()
+    _license_pat = re.compile(
+        r"(?m)Copyright (?P<byr>\d{4})-(?P<eyr>\d{4}) (?P<name>S\. Murthy Kambhampaty)"
+    )
+    if (_s := _license_pat.search(_license_text)) and _s["eyr"] == f"{TSN.year}":
+        _license_path.write_text(
+            _license_pat.sub(rf"Copyright \g<byr>-{TSN.year} \g<name>", _license_text)
+        )
+        (PROJ_DIR / "LICENSE").hardlink_to(_license_path)
+
     # Update version number in the package file
     PKG_INIT_PATH.write_text(
         re.sub(
@@ -87,33 +96,22 @@ def _update_version(_update_level: str) -> None:
     # Update pyproject.toml
     run([UV_CMD, "version", "--frozen", f"{_upd_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
 
-    # Commit, tag and push
-    for _f in (
-        f"{_license_path}",
-        f"{PROJ_DIR / '.pre-commit-config.yaml'}",
-        f"{PROJ_DIR / 'uv.lock'}",
-        f"{PKG_INIT_PATH}",
-        f"{PROJ_DIR / 'pyproject.toml'}",
-    ):
-        PROJ_REPO.index.add(_f)
-    PROJ_REPO.index.commit(f'"chore({TSN.to_date_string()}): update version"')
-    # run(
-    #     [
-    #         GIT_CMD,
-    #         "commit",
-    #         f"{_license_path}",
-    #         f"{PROJ_DIR / '.pre-commit-config.yaml'}",
-    #         f"{PROJ_DIR / 'uv.lock'}",
-    #         f"{PKG_INIT_PATH}",
-    #         f"{PROJ_DIR / 'pyproject.toml'}",
-    #         "-m",
-    #         f'"chore({TSN.to_date_string()}): update version"',
-    #     ],
-    #     env=os.environ.copy(),
-    #     cwd=PROJ_DIR,
-    #     check=True,
-    #     shell=False,
-    # )
+    run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        [
+            GIT_CMD,
+            "commit",
+            f"{_license_path}",
+            f"{PROJ_DIR / '.pre-commit-config.yaml'}",
+            f"{PROJ_DIR / 'uv.lock'}",
+            f"{PKG_INIT_PATH}",
+            f"{PROJ_DIR / 'pyproject.toml'}",
+            "-m",
+            f'"chore({TSN.to_date_string()}): update version"',
+        ],
+        cwd=PROJ_DIR,
+        check=True,
+        shell=False,
+    )
     run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
     run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
     run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
