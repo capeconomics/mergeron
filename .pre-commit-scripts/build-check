@@ -1,3 +1,0 @@
-#!/bin/bash
-
-uv check --preview-features check-command && rm dist/mergeron-*
