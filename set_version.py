@@ -2,16 +2,18 @@
 """Updates package version number, and commits and tags repository."""
 
 import argparse
-import os
 import re
 import tomllib
 from pathlib import Path
 from subprocess import run
 
+import git
 import pendulum
 import semver
 
 PROJ_DIR = Path(__file__).parent
+PROJ_REPO = git.Repo(PROJ_DIR)
+
 PKG_INIT_PATH: Path = next(PROJ_DIR.glob("src/*/__init__.py"))
 PKG_SRC_ROOT: Path = PKG_INIT_PATH.parent
 PKG_NAME: str = PKG_SRC_ROOT.name
@@ -86,25 +88,34 @@ def _update_version(_update_level: str) -> None:
     run([UV_CMD, "version", "--frozen", f"{_upd_ver}"], check=True)  # ruff: ignore[subprocess-without-shell-equals-true]
 
     # Commit, tag and push
-    run(  # ruff: ignore[subprocess-without-shell-equals-true]
-        [
-            GIT_CMD,
-            "commit",
-            f"{_license_path}",
-            f"{PROJ_DIR / '.pre-commit-config.yaml'}",
-            f"{PROJ_DIR / 'uv.lock'}",
-            f"{PKG_INIT_PATH}",
-            f"{PROJ_DIR / 'pyproject.toml'}",
-            "-m",
-            f'"chore({TSN.to_date_string()}): update version"',
-        ],
-        env=os.environ.copy(),
-        cwd=PROJ_DIR,
-        check=True,
-        shell=False,
-    )
+    for _f in (
+        f"{_license_path}",
+        f"{PROJ_DIR / '.pre-commit-config.yaml'}",
+        f"{PROJ_DIR / 'uv.lock'}",
+        f"{PKG_INIT_PATH}",
+        f"{PROJ_DIR / 'pyproject.toml'}",
+    ):
+        PROJ_REPO.index.add(_f)
+    PROJ_REPO.index.commit(f'"chore({TSN.to_date_string()}): update version"')
+    # run(
+    #     [
+    #         GIT_CMD,
+    #         "commit",
+    #         f"{_license_path}",
+    #         f"{PROJ_DIR / '.pre-commit-config.yaml'}",
+    #         f"{PROJ_DIR / 'uv.lock'}",
+    #         f"{PKG_INIT_PATH}",
+    #         f"{PROJ_DIR / 'pyproject.toml'}",
+    #         "-m",
+    #         f'"chore({TSN.to_date_string()}): update version"',
+    #     ],
+    #     env=os.environ.copy(),
+    #     cwd=PROJ_DIR,
+    #     check=True,
+    #     shell=False,
+    # )
     run([GIT_CMD, "tag", f"{_upd_ver}"], check=True, shell=False)  # ruff: ignore[S603]
-    run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[S603]
+    run([GIT_CMD, "push"], check=True, shell=False)  # ruff: ignore[subprocess-without-shell-equals-true]
     run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
 
 
