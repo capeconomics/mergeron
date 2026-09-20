@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from .. import EMPTY_ARRAYBIGINT
-from .. import YAML
 from .. import _dict_from_mapping
 from .. import _mappingproxy_from_mapping
 from .. import zipfile
@@ -25,6 +24,7 @@ from . import FCOUNT_TABLE_ALL
 from . import HHI_TABLE_ALL
 from . import INVDATA_ARCHIVE_PATH
 from . import TABLE_TYPES
+from . import YAML
 from . import INVData
 from . import INVDataDict
 from . import INVTableData

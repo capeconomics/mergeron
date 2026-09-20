@@ -56,11 +56,11 @@ from KDEpy.bw_selection import improved_sheather_jones
 from python_calamine import CalamineWorkbook
 
 from .. import WORK_DIR as PKG_WORK_DIR
-from .. import YAML
 from .. import ArrayDouble
 from .. import _mappingproxy_from_mapping
 from .. import zipfile
 from . import MGNDATA_ARCHIVE_PATH
+from . import YAML
 from . import EmpiricalMarginData
 
 WORK_DIR: Path = globals().get("WORK_DIR", PKG_WORK_DIR)

@@ -27,7 +27,6 @@ from .. import EMPTY_ARRAYBIGINT
 from .. import EMPTY_ARRAYBOOLEAN
 from .. import NTHREADS
 from .. import PKG_NAME
-from .. import YAML
 from .. import ArrayBIGINT
 from .. import ArrayBoolean
 from .. import ArrayDouble
@@ -35,6 +34,7 @@ from .. import RECForm
 from .. import yaml_rt_mapper
 from .. import zipfile
 from . import SUBSAMPLE_SIZE
+from . import YAML
 from . import HMTSpec
 from . import HSRFilingTest
 from . import MarketsData

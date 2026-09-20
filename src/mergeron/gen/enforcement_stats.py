@@ -8,7 +8,6 @@ import numpy as np
 from scipy.interpolate import make_interp_spline
 
 from .. import EMPTY_ARRAYBIGINT
-from .. import YAML
 from .. import ArrayBIGINT
 from .. import ArrayUINT8
 from .. import Enameled
@@ -18,6 +17,7 @@ from ..core import TABLE_TYPES
 from ..core import TOT_KEY
 from ..core import INVData
 from ..core import INVTableData
+from . import YAML
 from . import INVResolution
 from . import StatsGroup
 

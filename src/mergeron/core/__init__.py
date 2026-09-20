@@ -20,7 +20,6 @@ from .. import ArrayBIGINT
 from .. import ArrayDouble
 from .. import ArrayFloat
 from .. import data as mdat
-from .. import yaml_rt_mapper as yaml_rt_mapper
 from .. import yamlize_attrs
 
 PKG_WORK_DIR = WORK_DIR
