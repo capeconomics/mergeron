@@ -18,8 +18,8 @@ keywords = [
   "upward pricing pressure",
 ]
 license = "BSD-3-Clause"
-license-files = [ "docs/source/license.rst" ]
-authors = [ { name = "Murthy Kambhampaty", email = "smk@capeconomics.com" } ]
+license-files = ["docs/source/license.rst"]
+authors = [{ name = "Murthy Kambhampaty", email = "smk@capeconomics.com" }]
 requires-python = ">=3.12,<4.0"
 # Classifiers list: https://pypi.org/classifiers/
 classifiers = [
@@ -61,7 +61,7 @@ urls.Homepage = "https://software.capeconomics.com/mergeron"
 urls.Repository = "https://github.com/capeconomics/mergeron.git"
 
 [dependency-groups]
-dev = [ "prek", "semver" ]
+dev = ["prek", "semver"]
 test = [
   "coverage",
   "pendulum",
@@ -82,27 +82,32 @@ doc = [
   "sphinx-autodoc-typehints",
   "sphinx-immaterial",
 ]
-lint = [
- "mypy",
- "ruff",
-]
+lint = ["mypy", "ruff"]
 
 [tool.mypy]
-ignore_missing_imports = false
-warn_redundant_casts = true
-warn_unreachable = true
-allow_redefinition_new = true
-local_partial_types = true
-disable_error_code = [ "import-untyped" ]
-strict_equality = true
-strict_equality_for_none = true
+exclude = ["tests/", ".venv/"]
+
 strict = true
 pretty = true
+
 cache_fine_grained = true
-enable_incomplete_feature = [ "PreciseTupleTypes" ]
 fixed_format_cache = true
+
+enable_incomplete_feature = ["PreciseTupleTypes"]
+disable_error_code = ["import-untyped"]
+
+ignore_missing_imports = false
+
+strict_equality = true
+strict_equality_for_none = true
+local_partial_types = true
 no_implicit_optional = true
 no_implicit_reexport = false
+
+warn_redundant_casts = true
+allow_redefinition_new = true
+
+warn_unreachable = true
 
 [tool.ruff]
 # Same as Black.
@@ -174,7 +179,7 @@ ignore = [
   # flake8-bugbear
   "function-uses-loop-variable",
   # flake-8,
-  "line-too-long",    # line length managed per Black formatter rules, ignore tis
+  "line-too-long",           # line length managed per Black formatter rules, ignore tis
   "unnecessary-dunder-call", # dunder calls
   # flake8-comprehensions
   "magic-value-comparison", # an occasional comarison to scalar is unavoidable
@@ -182,13 +187,13 @@ ignore = [
   # RUF
   "ambiguous-unicode-character-docstring",
   "ambiguous-unicode-character-comment",
-  "non-empty-init-module",  # we define package/subpackage types and constants in __init__.py files
-  "rule-codes-in-suppression-comments",  # rule codes are harder to read but more compact; lookup not too hard
-  "suspicious-subprocess-import",    # accept subprocess module
+  "non-empty-init-module",                 # we define package/subpackage types and constants in __init__.py files
+  "rule-codes-in-suppression-comments",    # rule codes are harder to read but more compact; lookup not too hard
+  "suspicious-subprocess-import",          # accept subprocess module
   # flake8-type-checking
-  "relative-imports",  # we use relative imports - repeated patterns, flexible to name-changes
+  "relative-imports", # we use relative imports - repeated patterns, flexible to name-changes
   # pyupgrade
-  "non-pep695-type-alias",   # prefer typing.TypeAlias to type keyword due to inconvenience with latter
+  "non-pep695-type-alias", # prefer typing.TypeAlias to type keyword due to inconvenience with latter
 ]
 # names with leading underscore for positional arguments and parametric variables (no reassigment)
 dummy-variable-rgx = "^_+$"
@@ -205,7 +210,7 @@ pylint.max-statements = 80
 ruff.strictly-empty-init-modules = false
 
 [tool.pytest.ini_options]
-testpaths = [ "tests" ]
+testpaths = ["tests"]
 addopts = [
   "--import-mode=importlib",
   "--cov=mergeron",
@@ -229,7 +234,7 @@ tmp_path_retention_policy = "failed"
 isolated_build = true
 
 [tool.tox.env_run_base]
-allowlist_externals = [ "uv", "uv_build", "pytest" ]
+allowlist_externals = ["uv", "uv_build", "pytest"]
 commands = [
   [
     "uv",
@@ -251,7 +256,7 @@ wheel_build_env = ".pkg"
 all = "ignore"
 
 [tool.uv]
-default-groups = [ "dev" ]
+default-groups = ["dev"]
 
 [tool.uv.pip]
 no-build = true
