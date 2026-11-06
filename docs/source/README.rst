@@ -119,7 +119,7 @@ The following is an example of plotting concentration and diversion ratio bounda
     )
 
 
-Boundary plots are created with Matplotlib and the provided function, :func:`guidelines_boundary_functions()`,
+Boundary plots are created with Matplotlib and the function, :func:`guidelines_boundary_functions()`,
 and written to PDF with backend="pgf" as the default (Matplotlib) backend.
 In Jupyter or Marimo notebooks, use backend="inline" for inline rendering, as below.
 
