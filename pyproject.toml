@@ -145,8 +145,8 @@ indent-style = "space"
 quote-style = "double"
 line-ending = "lf"
 skip-magic-trailing-comma = true
-docstring-code-line-length = 60
 docstring-code-format = true
+docstring-code-line-length = 60
 
 [tool.ruff.lint]
 preview = true
@@ -201,13 +201,16 @@ dummy-variable-rgx = "^_+$"
 isort.force-single-line = true
 pydocstyle.convention = "numpy"
 
-pylint.max-args = 16
-pylint.max-branches = 16
-pylint.max-locals = 32
-pylint.max-statements = 80
+[tool.ruff.lint.pylint]
+max-args = 16
+max-branches = 16
+max-locals = 32
+max-statements = 80
 
+[tool.ruff.lint.ruff]
 # We define package/subpackage types and constants in __init__.py files.
-ruff.strictly-empty-init-modules = false
+strictly-empty-init-modules = false
+parenthesize-tuple-in-subscript = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
