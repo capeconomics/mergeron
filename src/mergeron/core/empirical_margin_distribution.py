@@ -41,7 +41,7 @@ be considered representative of realized margins for modeling, say,
 firm's financial performance or investments.
 """
 
-import datetime
+import datetime as dt
 import os
 import re
 import shutil
@@ -193,7 +193,7 @@ def margin_data_getter(
         row_keys: list[str] = [_c.upper() for _c in xl_wks[8][1:]]  # type: ignore
 
         _u = xl_wks[0][1]
-        if not isinstance(_u, datetime.date):
+        if not isinstance(_u, dt.date):
             print(_u)
             print(xl_wks[:8])
             raise ValueError("Worksheet does not match expected layout.")
@@ -281,9 +281,9 @@ def download_file(_u3pm: urllib3.PoolManager, _url: str, _path: Path) -> None:
         _path,
         times=(
             (
-                _t := datetime.datetime
+                _t := dt.datetime
                 .strptime(_uh.headers["Last-Modified"], "%a, %d %b %Y %H:%M:%S %Z")
-                .astimezone(datetime.UTC)
+                .astimezone(dt.UTC)
                 .timestamp()
             ),
             _t,
