@@ -248,7 +248,7 @@ class ExampleMarketShareSpec:
 
     @classmethod
     def to_yaml(
-        cls, _r: yaml.representer.RoundTripRepresenter, _d: ExampleMarketShareSpec
+        cls, _r: yaml.RoundTripRepresenter, _d: ExampleMarketShareSpec
     ) -> yaml.MappingNode:
         retval: yaml.MappingNode = _r.represent_mapping(
             f"!{cls.__name__}",
@@ -258,9 +258,9 @@ class ExampleMarketShareSpec:
 
     @classmethod
     def from_yaml(
-        cls, _c: yaml.constructor.RoundTripConstructor, _n: yaml.MappingNode
+        cls, _c: yaml.RoundTripConstructor, _n: yaml.MappingNode
     ) -> ExampleMarketShareSpec:
-        data_ = yaml.constructor.CommentedMap()
+        data_ = yaml.CommentedMap()
         _c.construct_mapping(_n, maptyp=data_)
         return cls(**data_)
 
