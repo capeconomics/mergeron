@@ -165,7 +165,6 @@ ignore = [
   "non-empty-init-module",                 # we define package/subpackage types and constants in __init__.py files
   "rule-codes-in-suppression-comments",    # rule codes are harder to read but more compact; lookup not too hard
   "suspicious-subprocess-import",          # accept subprocess module
-  "useless-import-alias",                  # no-implicit-reexport requires these
   # flake8-type-checking
   "relative-imports", # we use relative imports - repeated patterns, flexible to name-changes
   # pyupgrade
