@@ -8,7 +8,7 @@ from pathlib import Path
 from subprocess import run
 
 import pendulum
-import semver
+from semver import Version
 
 PROJ_DIR = Path(__file__).parent
 
@@ -38,7 +38,7 @@ def _update_version(_update_level: str) -> None:
 
     _pkg_ver = get_pkg_version()
     _upd_ver = (
-        semver.Version(TSN.year, TSN.toordinal(), 0)
+        Version(TSN.year, TSN.toordinal(), 0)
         if _update_level == "full"
         else _pkg_ver.bump_patch()
     )
@@ -120,11 +120,11 @@ def _update_version(_update_level: str) -> None:
     run([GIT_CMD, "push", "--tags"], check=True, shell=False)  # ruff: ignore[S603]
 
 
-def get_pkg_version() -> semver.Version:
+def get_pkg_version() -> Version:
     """Get version number of current package."""
     _t = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
-    return semver.Version(**semver.parse(_t["project"]["version"]))
+    return Version.parse(_t["project"]["version"])
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ from pathlib import Path
 from subprocess import PIPE
 from subprocess import run
 
-import semver
+from semver import Version
 
 version_str = run(
     ["uv", "version"],  # ruff: ignore[S607]
@@ -19,7 +19,7 @@ version_str = run(
 project_name, project_version = version_str.split()
 project_version = project_version.replace(".post", "-post")
 
-version_dict = semver.parse(project_version)
+version_dict = Version.parse(project_version).to_dict()
 
 # Configuration file for the Sphinx documentation builder.
 #
