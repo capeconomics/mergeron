@@ -18,7 +18,7 @@ from ..core import TOT_KEY
 from ..core import INVData
 from ..core import INVTableData
 from . import INVResolution
-from . import StatsGroup as StatsGroup
+from . import StatsGroup
 from . import instant_yaml
 
 

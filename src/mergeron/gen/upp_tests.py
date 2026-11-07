@@ -20,11 +20,11 @@ from . import INVResolution
 from . import MarketsData
 from . import ShareSpec
 from . import SHRDistribution
+from . import StatsGroup
 from . import UPPTestRegime
 from . import UPPTestsCounts
 from . import enforcement_stats as esl
 from .data_generation_functions import compute_merging_firm_diversion_ratios
-from .enforcement_stats import StatsGroup
 from .enforcement_stats import compute_enforcement_counts
 
 

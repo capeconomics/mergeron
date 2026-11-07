@@ -44,12 +44,12 @@ from . import PriceSpec
 from . import SeedSequenceData
 from . import ShareSpec
 from . import SHRDistribution
+from . import StatsGroup
 from . import UPPTestRegime
 from . import UPPTestsCounts
 from . import instant_yaml
 from .data_generation_functions import market_share_sampler
 from .data_generation_functions import prices_sampler
-from .enforcement_stats import StatsGroup
 from .enforcement_stats import compute_enforcement_counts
 from .upp_tests import compute_upp_test_counts
 
