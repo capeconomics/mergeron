@@ -8,7 +8,7 @@ firm-counts matching those specified.
 
 from pathlib import Path
 
-from mergeron import YAML
+from mergeron import instant_yaml
 from mergeron import zipfile
 
 concentrated_subset = {
@@ -346,14 +346,14 @@ with (
     zipfile.ZipFile(specs_path, "w", compression=93) as _zh,
     _zh.open("concentrated_subset.yaml", "w") as _zfh,
 ):
-    YAML.dump(concentrated_subset, _zfh)
+    instant_yaml.dump(concentrated_subset, _zfh)
 
 
 with (
     zipfile.ZipFile(specs_path, "r") as _zh,
     _zh.open("concentrated_subset.yaml") as _zfh,
 ):
-    concentrated_subset_de = YAML.load(_zfh)
+    concentrated_subset_de = instant_yaml.load(_zfh)
 
 if concentrated_subset_de != concentrated_subset:
     raise AssertionError("Deserialized data does not match original.")

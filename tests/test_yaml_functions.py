@@ -16,7 +16,7 @@ import mergeron.core.guidelines_boundaries as gbl
 import mergeron.gen.data_generation as dgm
 from mergeron import PKG_NAME
 from mergeron import WORK_DIR
-from mergeron import YAML
+from mergeron import instant_yaml
 from mergeron.gen import DEFAULT_FCOUNT_WTS
 from mergeron.gen import PCMDistribution
 from mergeron.gen import PCMSpec
@@ -81,13 +81,13 @@ def test_object_persistence(
     print("The present instance is:")
     print(repr(_test_instance))
 
-    YAML.dump(_test_instance, stream=test_path)
+    instant_yaml.dump(_test_instance, stream=test_path)
     try:
-        test_instance_from_yaml = YAML.load(test_path)
+        test_instance_from_yaml = instant_yaml.load(test_path)
     except NameError:
         print(test_path.read_text())
         print(repr(_test_instance.__class__))
-        print(repr(YAML.representer.yaml_representers[_test_instance.__class__]))
+        print(repr(instant_yaml.representer.yaml_representers[_test_instance.__class__]))
         raise
 
     if _test_instance != test_instance_from_yaml:

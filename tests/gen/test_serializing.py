@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from attrs import fields
 
-from mergeron import YAML
+from mergeron import instant_yaml
 from mergeron import zipfile
 from mergeron.core import guidelines_boundaries as gbl
 from mergeron.core import pseudorandom_numbers as prn
@@ -65,22 +65,22 @@ def test_serialize_by_hand(_sample_size: int, yaml_file_path: Path) -> None:
         with zipfile.ZipFile(archive_path, mode="w", compression=93) as _hzh:
             zpath = zipfile.Path(_hzh)
             with (zpath / "market_sample.yaml").open("w") as _yfh:
-                YAML.dump(market_sample, _yfh)
+                instant_yaml.dump(market_sample, _yfh)
 
             with (zpath / "market_dataset.h5").open("wb") as _hfh:
                 _hfh.write(byte_stream.getvalue())
 
         with zipfile.ZipFile(archive_path) as _hzf:
             hzp = zipfile.Path(_hzf)
-            market_sample_deser = YAML.load((hzp / "market_sample.yaml").read_text())
+            market_sample_deser = instant_yaml.load((hzp / "market_sample.yaml").read_text())
 
             with (hzp / "market_dataset.h5").open("rb") as _hfh:
                 h5f = h5py.File(_hfh)
                 market_dataset = MarketsData(**{_a: h5f[_a][:] for _a in h5f})
 
         with io.BytesIO() as _byt:
-            YAML.dump(market_sample, _byt)
-            market_sample_test = YAML.load(_byt.getvalue())
+            instant_yaml.dump(market_sample, _byt)
+            market_sample_test = instant_yaml.load(_byt.getvalue())
 
         if market_sample_deser != market_sample_test:
             raise AssertionError(
@@ -130,11 +130,11 @@ def test_int_serialize(_sample_size: int, yaml_file_path: Path) -> None:
 
     if market_sample_test != market_sample:
         print("Market sample:")
-        YAML.dump(market_sample, sys.stdout)
+        instant_yaml.dump(market_sample, sys.stdout)
         print(market_sample.enforcement_counts)
 
         print("Restored market sample:")
-        YAML.dump(market_sample_test, sys.stdout)
+        instant_yaml.dump(market_sample_test, sys.stdout)
         print(market_sample_test.enforcement_counts)
 
         raise AssertionError("Restored market sample does not match source.")

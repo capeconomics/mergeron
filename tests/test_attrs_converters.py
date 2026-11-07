@@ -14,15 +14,15 @@ from attrs import cmp_using
 from attrs import field
 from attrs import frozen
 from attrs import validators
-from ruamel import yaml
+from ruamel.yaml.comments import CommentedMap
 from ruamel.yaml.compat import StringIO
 
 import mergeron.gen.data_generation as dgm
 from mergeron import DEFAULT_REC
-from mergeron import YAML
 from mergeron import ArrayFloat
 from mergeron import ArrayINT
 from mergeron import RECForm
+from mergeron import instant_yaml
 from mergeron.core import DEFAULT_DIST_PARMS
 from mergeron.gen import DEFAULT_FCOUNT_WTS
 from mergeron.gen import SHRDistribution
@@ -30,13 +30,15 @@ from mergeron.gen import SHRDistribution
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from ruamel import yaml
+
 
 def _dump_to_yaml_str(
     _yaml: yaml.YAML,
     _object: Any,
     _stream: Path | StringIO | None = None,
     **kw: Mapping[str, Any],
-) -> Any | None:
+) -> str | None:
     if _stream is None:
         _stream = StringIO()
 
@@ -98,7 +100,7 @@ def _shr_dp_conv(
     return ArrayFloat(retval)
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @frozen
 class ExampleMarketShareSpec:
     """Market share specification.
@@ -260,7 +262,7 @@ class ExampleMarketShareSpec:
     def from_yaml(
         cls, _c: yaml.RoundTripConstructor, _n: yaml.MappingNode
     ) -> ExampleMarketShareSpec:
-        data_ = yaml.CommentedMap()
+        data_ = CommentedMap()
         _c.construct_mapping(_n, maptyp=data_)
         return cls(**data_)
 
@@ -324,13 +326,15 @@ def test_local_yaml_test() -> None:
     """Test serializing-deserializing a market share specification."""
     test_share_spec = ExampleMarketShareSpec(dgm.SHRDistribution.UNI)
 
-    yaml_str = _dump_to_yaml_str(YAML, test_share_spec)
+    yaml_str = _dump_to_yaml_str(instant_yaml, test_share_spec)
     try:
-        test_share_spec_from_yaml = YAML.load(yaml_str)
+        test_share_spec_from_yaml = instant_yaml.load(yaml_str)
     except NameError:
         print(yaml_str)
         print(repr(test_share_spec.__class__))
-        print(repr(YAML.representer.yaml_representers[test_share_spec.__class__]))
+        print(
+            repr(instant_yaml.representer.yaml_representers[test_share_spec.__class__])
+        )
         raise
 
     if test_share_spec_from_yaml != test_share_spec:

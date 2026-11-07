@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from mergeron import YAML
+from mergeron import instant_yaml
 from mergeron import RECForm
 from mergeron import UPPAggregator
 from mergeron import zipfile
@@ -41,7 +41,7 @@ specs_path = (Path(__file__).parents[1] / "data").joinpath(
     "test_upp_tests_hmt_archived_specs_concentrating_firm_counts.zip"
 )
 with ZipFile(specs_path, "r") as _zh, _zh.open("concentrated_subset.yaml") as _zfh:
-    firm_count_concentrating_subset = YAML.load(_zfh)
+    firm_count_concentrating_subset = instant_yaml.load(_zfh)
 
 bench_set = tuple(
     iter_prod(
@@ -187,13 +187,13 @@ def test_upp_tests_counts(_spec: tuple[float, str, str, str, str]) -> None:
         with ZipFile(_zap, "w", 93) as _zaf:
             _zpath = zipfile.Path(_zaf, at="")
             with (_zpath / "mergeron_market_sample_enf_counts.yaml").open("w") as _yfh:
-                YAML.dump(market_sample.enforcement_counts, _yfh)
+                instant_yaml.dump(market_sample.enforcement_counts, _yfh)
 
     # Load benchmark data for the test
     with ZipFile(_zap, "r") as _zaf:
         _zpath = zipfile.Path(_zaf, at="")
         with (_zpath / "mergeron_market_sample_enf_counts.yaml").open("r") as _yfh:
-            _upp_test_counts_bechmark = YAML.load(_yfh)
+            _upp_test_counts_bechmark = instant_yaml.load(_yfh)
 
     if market_sample.enforcement_counts and not all((
         np.array_equal(

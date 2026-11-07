@@ -9,7 +9,7 @@ import pytest
 from attrs import fields
 from numpy.testing import assert_allclose
 
-from mergeron import YAML
+from mergeron import instant_yaml
 from mergeron import RECForm
 from mergeron import UPPAggregator
 from mergeron import zipfile
@@ -361,8 +361,8 @@ def test_markets_sampler(
     # Roundtrip the market sample, no data, through YAML serialization
     # This just gives us a "bare" MarketSample object, i.e., without data, for testing
     with io.StringIO() as _yb:
-        _ = YAML.dump(market_sample, _yb)
-        _cms = YAML.load(_yb.getvalue())
+        _ = instant_yaml.dump(market_sample, _yb)
+        _cms = instant_yaml.load(_yb.getvalue())
 
     # Rebuild a bare MarketSample object from the deserialized YAML
     #   this demonstrates an alternative path to the same
