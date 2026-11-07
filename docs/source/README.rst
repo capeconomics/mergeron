@@ -36,15 +36,13 @@ mergeron: Python for analyzing merger enforcement policy
    :alt: Package manager: uv
    :target: https://github.com/astral-sh/uv
 
-.. image:: https://www.mypy-lang.org/static/mypy_badge.svg
-    :alt: Type checker: mypy
-    :target: https://mypy-lang.org/
-
-
 .. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
     :alt: Formatter: ruff
     :target: https://github.com/astral-sh/ruff
 
+.. image:: https://img.shields.io/endpoint?url=https://pyrefly.org/badge.json
+    :alt: Type checker: pyrefly
+    :target: https://pyrefly.org/
 
 .. image:: https://img.shields.io/badge/License-BSD_3--Clause-blue.svg
    :alt: License: BSD-3-Clause
