@@ -19,8 +19,8 @@ import numpy as np
 from mpmath import ctx_mp_python
 from mpmath.matrices import matrices
 
-from ._serialization import YAML as YAML
 from ._serialization import Enameled as Enameled
+from ._serialization import instant_yaml as instant_yaml
 from ._serialization import yaml_rt_mapper as yaml_rt_mapper
 from ._serialization import yamlize_attrs as yamlize_attrs
 
@@ -67,7 +67,7 @@ MPMatrix: TypeAlias = matrices._matrix
 np.set_printoptions(precision=28, floatmode="fixed", legacy=False)
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class RECForm(str, Enameled):
     R"""For derivation of recapture rate from market shares.
@@ -116,7 +116,7 @@ class RECForm(str, Enameled):
     """
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class UPPAggregator(str, Enameled):
     """Aggregator for GUPPI and diversion ratio estimates."""
@@ -135,7 +135,7 @@ class UPPAggregator(str, Enameled):
 
 
 # https://numpy.org/devdocs/user/basics.subclassing.html#slightly-more-realistic-example-attribute-added-to-existing-array
-@YAML.register_class
+@instant_yaml.register_class
 class TypedNDArray(np.ndarray):
     """NDArray with type specification."""
 
@@ -216,7 +216,7 @@ class TypedNDArray(np.ndarray):
         return TypedNDArray.__new__(cls, _data, _data.dtype).view(cls)
 
 
-@YAML.register_class
+@instant_yaml.register_class
 class ArrayBoolean(TypedNDArray):
     """Array of booleans."""
 
@@ -225,7 +225,7 @@ class ArrayBoolean(TypedNDArray):
         return super().__new__(cls, _arr, np.bool).view(cls)
 
 
-@YAML.register_class
+@instant_yaml.register_class
 class ArrayDouble(TypedNDArray):
     """Array of double-precision floats."""
 
@@ -236,7 +236,7 @@ class ArrayDouble(TypedNDArray):
         return super().__new__(cls, _arr, np.float64).view(cls)
 
 
-@YAML.register_class
+@instant_yaml.register_class
 class ArrayFloat(TypedNDArray):
     """Array of floats, any precision supported by numpy."""
 
@@ -250,7 +250,7 @@ class ArrayFloat(TypedNDArray):
         return super().__new__(cls, _arr, _dtype).view(cls)
 
 
-@YAML.register_class
+@instant_yaml.register_class
 class ArrayBIGINT(TypedNDArray):
     """Array of 64-bit integers."""
 
@@ -259,7 +259,7 @@ class ArrayBIGINT(TypedNDArray):
         return super().__new__(cls, _arr, np.int64).view(cls)
 
 
-@YAML.register_class
+@instant_yaml.register_class
 class ArrayINT(TypedNDArray):
     """Array of integers, any precision supported by numpy."""
 
@@ -271,7 +271,7 @@ class ArrayINT(TypedNDArray):
         return super().__new__(cls, _arr, _dtype).view(cls)
 
 
-@YAML.register_class
+@instant_yaml.register_class
 class ArrayMPFloat(TypedNDArray):
     """Array of arbitrary-precision floats, mpmath.mpf()s."""
 
@@ -282,7 +282,7 @@ class ArrayMPFloat(TypedNDArray):
         return super().__new__(cls, _arr, np.object_).view(cls)
 
 
-@YAML.register_class
+@instant_yaml.register_class
 class ArrayUINT8(TypedNDArray):
     """Array of 8-bit unsigned integers."""
 

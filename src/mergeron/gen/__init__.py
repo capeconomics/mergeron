@@ -27,7 +27,6 @@ if TYPE_CHECKING:
 from .. import DEFAULT_REC
 from .. import EMPTY_ARRAYDOUBLE
 from .. import EMPTY_ARRAYUINT8 as EMPTY_ARRAYUINT8
-from .. import YAML as YAML
 from .. import ArrayBIGINT
 from .. import ArrayBoolean as ArrayBoolean
 from .. import ArrayDouble
@@ -37,6 +36,7 @@ from .. import ArrayUINT8 as ArrayUINT8
 from .. import Enameled
 from .. import RECForm
 from .. import UPPAggregator
+from .. import instant_yaml as instant_yaml
 from .. import yamlize_attrs
 from ..core import DEFAULT_BETA_DIST_PARMS
 from ..core import DEFAULT_DIST_PARMS
@@ -155,7 +155,7 @@ class SeedSequenceData:
     )
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class PriceSpec(str, Enameled):
     """Price specification.
@@ -196,7 +196,7 @@ class PriceSpec(str, Enameled):
     """Costs ranging from 1.0 to 0.2, by 0.2, with increasing share."""
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class SHRDistribution(str, Enameled):
     """Market share distributions."""
@@ -462,7 +462,7 @@ class ShareSpec:
             )
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class PCMDistribution(str, Enameled):
     """Margin distributions."""
@@ -473,7 +473,7 @@ class PCMDistribution(str, Enameled):
     EMPR_M = "Damodaran margin data, multi-modal resampling"
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class PCMRestriction(str, Enameled):
     """Restriction on generated Firm 2 margins."""
@@ -587,7 +587,7 @@ class PCMSpec:
     """See :class:`PCMRestriction`"""
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class HSRFilingTest(str, Enameled):
     """
@@ -694,7 +694,7 @@ class MarketsData:
         return _retval
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class INVResolution(str, Enameled):
     """Report investigations resulting in clearance; enforcement; or both, respectively."""
@@ -704,7 +704,7 @@ class INVResolution(str, Enameled):
     BOTH = "clearance and enforcement, respectively"
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class StatsGroup(str, Enameled):
     """Measure used to summarize investigations data."""

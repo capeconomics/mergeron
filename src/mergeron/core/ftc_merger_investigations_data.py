@@ -24,10 +24,10 @@ from . import FCOUNT_TABLE_ALL
 from . import HHI_TABLE_ALL
 from . import INVDATA_ARCHIVE_PATH
 from . import TABLE_TYPES
-from . import YAML
 from . import INVData
 from . import INVDataDict
 from . import INVTableData
+from . import instant_yaml
 from .process_ftc_merger_investigations_data import get_table_type
 from .process_ftc_merger_investigations_data import parse_ftc_reports
 
@@ -81,7 +81,7 @@ def construct_data(
             zipfile.ZipFile(_archive_path, "r") as _yzh,
             _yzh.open(f"{_archive_path.stem}.yaml", "r") as _yfh,
         ):
-            invdata_: INVData = YAML.load(_yfh)
+            invdata_: INVData = instant_yaml.load(_yfh)
         return invdata_
 
     invdata: INVDataDict = _dict_from_mapping(parse_ftc_reports())
@@ -135,7 +135,7 @@ def construct_data(
         zipfile.ZipFile(_archive_path, "w", compression=93) as _yzh,
         _yzh.open(f"{_archive_path.stem}.yaml", "w") as _yfh,
     ):
-        YAML.dump(retval, _yfh)
+        instant_yaml.dump(retval, _yfh)
 
     return retval
 

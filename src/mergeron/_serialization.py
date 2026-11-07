@@ -11,14 +11,17 @@ from typing import Any
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from ruamel import yaml
+
 
 import attrs
 import mpmath
 import numpy as np
-from ruamel import yaml
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
 
-YAML = yaml.YAML(typ="rt")
-YAML.indent(mapping=2, sequence=4, offset=2)
+instant_yaml = YAML(typ="rt")
+instant_yaml.indent(mapping=2, sequence=4, offset=2)
 
 
 # Add functions for serializing/deserializing some objects used
@@ -27,23 +30,23 @@ YAML.indent(mapping=2, sequence=4, offset=2)
 # Add yaml representer, constructor for various types
 # NoneType
 (_, _) = (
-    yaml.add_representer(
+    instant_yaml.representer.add_representer(
         type(None),
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_scalar("!None", "none"),
     ),
     # pyrefly: ignore[implicit-any-lambda]
-    yaml.add_constructor("!None", lambda _c, _n, /: None),
+    instant_yaml.constructor.add_constructor("!None", lambda _c, _n, /: None),
 )
 
 # Decimal
 (_, _) = (
-    yaml.add_representer(
+    instant_yaml.representer.add_representer(
         Decimal,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_scalar("!Decimal", f"{_d}"),
     ),
-    yaml.add_constructor(
+    instant_yaml.constructor.add_constructor(
         "!Decimal",
         # pyrefly: ignore[implicit-any-lambda]
         lambda _c, _n, /: Decimal(_c.construct_scalar(_n)),
@@ -53,12 +56,12 @@ YAML.indent(mapping=2, sequence=4, offset=2)
 
 # MappingProxyType
 _, _ = (
-    yaml.add_representer(
+    instant_yaml.representer.add_representer(
         MappingProxyType,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_mapping("!mappingproxy", dict(_d.items())),
     ),
-    yaml.add_constructor(
+    instant_yaml.constructor.add_constructor(
         "!mappingproxy",
         # pyrefly: ignore[implicit-any-lambda]
         lambda _c, _n: MappingProxyType(dict(**yaml_rt_mapper(_c, _n))),
@@ -67,12 +70,12 @@ _, _ = (
 
 # mpmpath.mpf
 (_, _) = (
-    yaml.add_representer(
+    instant_yaml.representer.add_representer(
         mpmath.mpf,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_scalar("!MPFloat", f"{_d}"),
     ),
-    yaml.add_constructor(
+    instant_yaml.constructor.add_constructor(
         "!MPFloat",
         # pyrefly: ignore[implicit-any-lambda]
         lambda _c, _n, /: mpmath.mpf(_c.construct_scalar(_n)),
@@ -81,12 +84,12 @@ _, _ = (
 
 # mpmath.matrix
 (_, _) = (
-    yaml.add_representer(
+    instant_yaml.representer.add_representer(
         mpmath.matrix,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_sequence("!MPMatrix", _d.tolist()),
     ),
-    yaml.add_constructor(
+    instant_yaml.constructor.add_constructor(
         "!MPMatrix",
         # pyrefly: ignore[implicit-any-lambda]
         lambda _c, _n, /: mpmath.matrix(_c.construct_sequence(_n, deep=True)),
@@ -95,12 +98,12 @@ _, _ = (
 
 # set
 (_, _) = (
-    yaml.add_representer(
+    instant_yaml.representer.add_representer(
         set,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_sequence("!set", tuple(_d)),
     ),
-    yaml.add_constructor(
+    instant_yaml.constructor.add_constructor(
         "!set",
         # pyrefly: ignore[implicit-any-lambda]
         lambda _c, _n, /: {tuple(_f) for _f in _c.construct_sequence(_n, deep=True)},
@@ -110,12 +113,12 @@ _, _ = (
 
 # nu.uint8
 (_, _) = (
-    yaml.add_representer(
+    instant_yaml.representer.add_representer(
         np.uint8,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_scalar("!uint8", f"{_d}"),
     ),
-    yaml.add_constructor(
+    instant_yaml.constructor.add_constructor(
         "!uint8",
         # pyrefly: ignore[implicit-any-lambda]
         lambda _c, _n, /: np.ubyte(_c.construct_scalar(_n)),
@@ -124,12 +127,12 @@ _, _ = (
 
 # np.ndarray
 (_, _) = (
-    yaml.add_representer(
+    instant_yaml.representer.add_representer(
         np.ndarray,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_sequence("!ndarray", (_d.tolist(), _d.dtype.str)),
     ),
-    yaml.add_constructor(
+    instant_yaml.constructor.add_constructor(
         "!ndarray",
         # pyrefly: ignore[implicit-any-lambda]
         lambda _c, _n, /: np.array(*_c.construct_sequence(_n, deep=True)),
@@ -141,7 +144,7 @@ def yaml_rt_mapper(
     _c: yaml.RoundTripConstructor, _n: yaml.MappingNode
 ) -> Mapping[str, Any]:
     """Construct mapping from a mapping node with the RoundTripConstructor."""
-    data_: Mapping[str, Any] = yaml.CommentedMap()
+    data_: Mapping[str, Any] = CommentedMap()
     _c.construct_mapping(_n, maptyp=data_, deep=True)
     return data_
 
@@ -162,7 +165,7 @@ def yamlize_attrs(_typ: type, /, *, attr_map: dict[str, type] = PKG_ATTRS_MAP) -
     _typ_tag = f"!{_typ.__name__}"
     attr_map |= {_typ_tag: _typ}
 
-    _ = yaml.add_representer(
+    _ = instant_yaml.representer.add_representer(
         _typ,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_mapping(
@@ -170,7 +173,7 @@ def yamlize_attrs(_typ: type, /, *, attr_map: dict[str, type] = PKG_ATTRS_MAP) -
             {_a.name: getattr(_d, _a.name) for _a in _d.__attrs_attrs__ if _a.init},
         ),
     )
-    _ = yaml.add_constructor(
+    _ = instant_yaml.constructor.add_constructor(
         _typ_tag,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _c, _n: attr_map[_typ_tag](**yaml_rt_mapper(_c, _n)),
@@ -178,7 +181,7 @@ def yamlize_attrs(_typ: type, /, *, attr_map: dict[str, type] = PKG_ATTRS_MAP) -
 
 
 # Yamelized Enum
-@YAML.register_class
+@instant_yaml.register_class
 class Enameled(enum.Enum):
     """Add YAML representer, constructor for enum.Enum."""
 

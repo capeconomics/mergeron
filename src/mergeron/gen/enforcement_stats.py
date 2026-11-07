@@ -17,12 +17,12 @@ from ..core import TABLE_TYPES
 from ..core import TOT_KEY
 from ..core import INVData
 from ..core import INVTableData
-from . import YAML
 from . import INVResolution
 from . import StatsGroup as StatsGroup
+from . import instant_yaml
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class IndustryGroup(str, Enameled):
     """Industry group of reported markets."""
@@ -39,7 +39,7 @@ class IndustryGroup(str, Enameled):
     IIC = "Industries in Common"
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @enum.unique
 class OtherEvidence(str, Enameled):
     """Additional evidence available, if any, for reported markets."""

@@ -39,7 +39,7 @@ from .. import ArrayFloat
 from .. import yaml_rt_mapper
 from . import DEFAULT_BETA_DIST_PARMS
 from . import DEFAULT_DIST_PARMS
-from . import YAML
+from . import instant_yaml
 
 RVDistType: TypeAlias = Literal[
     "Beta", "Dirichlet", "Gaussian", "Normal", "Random", "Uniform"
@@ -64,12 +64,12 @@ def prng(_s: SeedSequence | None = None, /) -> np.random.Generator:
 
 # Add yaml representer, constructor for SeedSequence
 (_, _) = (
-    YAML.representer.add_representer(
+    instant_yaml.representer.add_representer(
         SeedSequence,
         # pyrefly: ignore[implicit-any-lambda]
         lambda _r, _d: _r.represent_mapping("!SeedSequence", _d.state),
     ),
-    YAML.constructor.add_constructor(
+    instant_yaml.constructor.add_constructor(
         "!SeedSequence",
         # pyrefly: ignore[implicit-any-lambda]
         lambda _c, _n, /: SeedSequence(**yaml_rt_mapper(_c, _n)),

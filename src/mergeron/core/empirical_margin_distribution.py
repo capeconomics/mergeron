@@ -60,8 +60,8 @@ from .. import ArrayDouble
 from .. import _mappingproxy_from_mapping
 from .. import zipfile
 from . import MGNDATA_ARCHIVE_PATH
-from . import YAML
 from . import EmpiricalMarginData
+from . import instant_yaml
 
 WORK_DIR: Path = globals().get("WORK_DIR", PKG_WORK_DIR)
 """Redefined, in case the user defines WORK_DIR between module imports."""
@@ -170,7 +170,7 @@ def margin_data_getter(
     """Download and parse Prof.Damodaran's margin data."""
     if data_archive_path.is_file() and not data_download_flag:
         with zipfile.ZipFile(data_archive_path) as _yzp:
-            _margin_data: DamodaranMarginData = YAML.load(
+            _margin_data: DamodaranMarginData = instant_yaml.load(
                 _yzp.read(data_archive_path.with_suffix(".yaml").name)
             )
         return _margin_data
@@ -220,7 +220,7 @@ def margin_data_getter(
         zipfile.ZipFile(data_archive_path, "w", compression=93) as _yzp,
         _yzp.open(f"{data_archive_path.stem}.yaml", "w") as _yfh,
     ):
-        YAML.dump(_margin_data, _yfh)
+        instant_yaml.dump(_margin_data, _yfh)
 
     shutil.copy2(
         data_archive_path, Path(__file__).parents[1] / "data" / data_archive_path.name

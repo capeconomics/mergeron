@@ -15,11 +15,11 @@ from attrs import field
 from attrs import frozen
 
 from .. import WORK_DIR
-from .. import YAML as YAML
 from .. import ArrayBIGINT
 from .. import ArrayDouble
 from .. import ArrayFloat
 from .. import data as mdat
+from .. import instant_yaml as instant_yaml
 from .. import yamlize_attrs
 
 PKG_WORK_DIR = WORK_DIR

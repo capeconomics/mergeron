@@ -20,8 +20,6 @@ from numpy.random import SeedSequence
 
 if TYPE_CHECKING:
     from ruamel import yaml
-    from ruamel.yaml import constructor
-    from ruamel.yaml import representer
 
     from ..core import MGThresholds
 
@@ -36,7 +34,6 @@ from .. import RECForm
 from .. import yaml_rt_mapper
 from .. import zipfile
 from . import SUBSAMPLE_SIZE
-from . import YAML
 from . import HMTSpec
 from . import HSRFilingTest
 from . import MarketsData
@@ -49,6 +46,7 @@ from . import ShareSpec
 from . import SHRDistribution
 from . import UPPTestRegime
 from . import UPPTestsCounts
+from . import instant_yaml
 from .data_generation_functions import market_share_sampler
 from .data_generation_functions import prices_sampler
 from .enforcement_stats import StatsGroup
@@ -112,7 +110,7 @@ def _seed_data_conv(
     )
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @define(kw_only=True, slots=True, frozen=True)
 class MarketSample:
     """Parameter specification for market data generation."""
@@ -355,7 +353,7 @@ class MarketSample:
         name_root = f"{PKG_NAME}_market_sample"
 
         with (zpath / f"{name_root}.yaml").open("w") as _yfh:
-            YAML.dump(self, _yfh)
+            instant_yaml.dump(self, _yfh)
 
         if save_dataset:
             if self.dataset is None and self.enforcement_counts is None:
@@ -373,7 +371,7 @@ class MarketSample:
                     with (zpath / f"{name_root}_enforcement_counts.yaml").open(
                         "w"
                     ) as _yfh:
-                        YAML.dump(self.enforcement_counts, _yfh)
+                        instant_yaml.dump(self.enforcement_counts, _yfh)
 
         if not zip_.namelist():
             raise AssertionError("Serialization failed. Archive is empty.")
@@ -405,7 +403,7 @@ class MarketSample:
         elif not (zpath / f"{name_root}.yaml").is_file():
             raise ValueError("Archive has no serialized MarketSample class instance.")
 
-        market_sample_: MarketSample = YAML.load(
+        market_sample_: MarketSample = instant_yaml.load(
             (zpath / f"{name_root}.yaml").read_text()
         )
 
@@ -426,13 +424,15 @@ class MarketSample:
                         )
                 if _et:
                     object.__setattr__(
-                        market_sample_, "enforcement_counts", YAML.load(_ep.read_text())
+                        market_sample_,
+                        "enforcement_counts",
+                        instant_yaml.load(_ep.read_text()),
                     )
         return market_sample_
 
     @classmethod
     def to_yaml(
-        cls, _r: representer.RoundTripRepresenter, _d: MarketSample
+        cls, _r: yaml.RoundTripRepresenter, _d: MarketSample
     ) -> yaml.MappingNode:
         """Serialize market sample to YAML representation."""
         retval: yaml.MappingNode = _r.represent_mapping(
@@ -448,7 +448,7 @@ class MarketSample:
 
     @classmethod
     def from_yaml(
-        cls, _c: constructor.RoundTripConstructor, _n: yaml.MappingNode
+        cls, _c: yaml.RoundTripConstructor, _n: yaml.MappingNode
     ) -> MarketSample:
         """Deserialize market sample from YAML representation."""
         return cls(**yaml_rt_mapper(_c, _n))

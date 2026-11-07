@@ -24,16 +24,16 @@ from .. import ArrayDouble
 from .. import RECForm
 from .. import UPPAggregator
 from .. import yamlize_attrs
-from . import YAML
 from . import MGThresholds
 from . import PubYear
 from . import guidelines_boundary_functions as gbfn
+from . import instant_yaml
 
 mp.dps = 32
 mp.trap_complex = True
 
 
-@YAML.register_class
+@instant_yaml.register_class
 @frozen
 class GuidelinesStandards:
     """
