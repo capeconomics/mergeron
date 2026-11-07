@@ -240,7 +240,9 @@ def _construct_new_period_data(
             # The number of "revisions" applied below, for enforcing consistency,
             # is sufficiently small as to be unlikely to substantially impact
             # results from analysis of the data.
+            # pyrefly: ignore[implicit-any-empty-container]
             _cuml_array_stack = []
+            # pyrefly: ignore[implicit-any-empty-container]
             _base_array_stack = []
 
             for data_period_detail in _invdata:

@@ -65,6 +65,7 @@ def _parse_tables(
     _data_period = "".join(_DATA_PERIOD_RE.findall(_doc_title)[0])  # type: ignore[arg-type]
     invdata[_data_period] = {}
 
+    # pyrefly: ignore[implicit-any-empty-container]
     table_start, table_, table_no = False, [], ""
     for page_ in _invdata_doc.pages:
         for line_ in page_.extract_text().splitlines():
@@ -77,6 +78,7 @@ def _parse_tables(
                     invdata[_data_period][table_no] = _parse_lines(
                         _data_period, table_no, table_
                     )
+                    # pyrefly: ignore[implicit-any-empty-container]
                     table_start, table_, table_no = False, [], ""
             elif re.fullmatch(r"(Table\s+\d{1,2}\s*\.\d)", line_):
                 table_start, table_, table_no = True, [line_], line_

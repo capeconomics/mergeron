@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from typing import Any
 from typing import Self
 from typing import TypeAlias
+from typing import override
 
 import numpy as np
 from mpmath import ctx_mp_python
@@ -138,24 +139,26 @@ class UPPAggregator(str, Enameled):
 class TypedNDArray(np.ndarray):
     """NDArray with type specification."""
 
-    def __new__(  # ruff: ignore[undocumented-public-method]
+    def __new__(
         cls,
         _arr: Sequence[
             bool | float | int | MPFloat | Sequence[bool | float | int | MPFloat]
         ]
         | NDArray[np.bool | np.floating | np.integer | np.uint8]
         | MPMatrix,
-        _type: bool | float | MPFloat | np.bool | np.floating | np.integer | np.uint8,
+        _type: bool | float | object | np.bool | np.floating | np.integer | np.uint8,
         /,
         *,
         info: dict[str, Any] | None = None,
     ) -> Self:
+        """Initialize NDArray with type specification."""
         if not hasattr(_arr, "__len__") or isinstance(_arr, str):
             raise ValueError(f"Invalid first argument, {_arr!r}")
 
         if _type in {np.floating, np.integer}:
+            # pyrefly: ignore[no-matching-overload]
             _dtype = type(np.ravel(_arr)[0])
-        elif isinstance(_arr, MPMatrix):  # type: ignore[misc]
+        elif isinstance(_arr, MPMatrix):
             _dtype = object
             _arr = _arr.tolist()
         elif _type is MPFloat:
@@ -163,11 +166,13 @@ class TypedNDArray(np.ndarray):
         else:
             _dtype = _type
 
+        # pyrefly: ignore[no-matching-overload]
         if not len(np.ravel(_arr)):
-            _arr = np.array([], dtype=_dtype)  # type: ignore[arg-type]
+            # pyrefly: ignore[no-matching-overload]
+            _arr = np.array([], dtype=_dtype)
         elif (
             np.asarray(_arr).shape
-            and isinstance(_arr[0], Sequence | np.ndarray)
+            and isinstance(_arr[0], Sequence | np.ndarray)  # pyrefly: ignore[implicit-any-type-argument]
             and isinstance(np.ravel(_arr)[0], MPFloat)  # type: ignore[misc]
             and not ((_dtype is object) or np.issubdtype(_dtype, np.floating))  # type: ignore[arg-type]
         ):
@@ -179,11 +184,13 @@ class TypedNDArray(np.ndarray):
             raise ValueError(
                 f"Array type, {_dt!r}, is not compatible with target dtype, {_type}."
             )
-        obj = np.asarray(_arr, _dtype).view(cls)  # type: ignore[arg-type]
+        # pyrefly: ignore[no-matching-overload]
+        obj = np.asarray(_arr, _dtype).view(cls)
         obj.info = info
         return obj
 
-    def __array_finalize__(self, obj: np.ndarray | None) -> None:  # ruff: ignore[undocumented-magic-method]
+    @override
+    def __array_finalize__(self, obj: np.ndarray | None) -> None:
         if obj is None:
             return
         self.info = getattr(obj, "info", None)
@@ -191,16 +198,18 @@ class TypedNDArray(np.ndarray):
 
     @classmethod
     def to_yaml(
-        cls, _r: yaml.representer.RoundTripRepresenter, _d: np.ndarray
+        cls, _r: yaml.RoundTripRepresenter, _d: np.ndarray
     ) -> yaml.SequenceNode:
         """Serialize TypedNDArray."""
         return _r.represent_sequence(
-            f"!{super().__getattribute__(cls, '__name__')}", (_d.tolist(), _d.dtype.str)
+            # pyrefly: ignore[bad-argument-type]
+            f"!{super().__getattribute__(cls, '__name__')}",
+            (_d.tolist(), _d.dtype.str),
         )
 
     @classmethod
     def from_yaml(
-        cls, _c: yaml.constructor.RoundTripConstructor, _n: yaml.SequenceNode
+        cls, _c: yaml.RoundTripConstructor, _n: yaml.SequenceNode
     ) -> TypedNDArray:
         """Deserialize TypedNDArray."""
         _data = np.asarray(*_c.construct_sequence(_n, deep=True))
@@ -211,9 +220,8 @@ class TypedNDArray(np.ndarray):
 class ArrayBoolean(TypedNDArray):
     """Array of booleans."""
 
-    def __new__(  # ruff: ignore[undocumented-public-method]
-        cls, _arr: Sequence[bool | Sequence[bool]] | NDArray[np.bool_]
-    ) -> Self:
+    def __new__(cls, _arr: Sequence[bool | Sequence[bool]] | NDArray[np.bool_]) -> Self:
+        """Array of booleans."""
         return super().__new__(cls, _arr, np.bool).view(cls)
 
 
@@ -221,9 +229,10 @@ class ArrayBoolean(TypedNDArray):
 class ArrayDouble(TypedNDArray):
     """Array of double-precision floats."""
 
-    def __new__(  # ruff: ignore[undocumented-public-method]
+    def __new__(
         cls, _arr: Sequence[float | Sequence[float]] | NDArray[np.float64]
     ) -> Self:
+        """Array of double-precision floats."""
         return super().__new__(cls, _arr, np.float64).view(cls)
 
 
@@ -231,9 +240,10 @@ class ArrayDouble(TypedNDArray):
 class ArrayFloat(TypedNDArray):
     """Array of floats, any precision supported by numpy."""
 
-    def __new__(  # ruff: ignore[undocumented-public-method]
+    def __new__(
         cls, _arr: Sequence[float | Sequence[float]] | NDArray[np.floating]
     ) -> Self:
+        """Array of floats, any precision supported by numpy."""
         _dtype = _arr.dtype if hasattr(_arr, "dtype") else np.float64
         if not np.issubdtype(_dtype, np.floating):
             raise ValueError(f"Array type, {_dtype!r}, is not a float type.")
@@ -244,9 +254,8 @@ class ArrayFloat(TypedNDArray):
 class ArrayBIGINT(TypedNDArray):
     """Array of 64-bit integers."""
 
-    def __new__(  # ruff: ignore[undocumented-public-method]
-        cls, _arr: Sequence[int | Sequence[int]] | NDArray[np.int64]
-    ) -> Self:
+    def __new__(cls, _arr: Sequence[int | Sequence[int]] | NDArray[np.int64]) -> Self:
+        """Array of 64-bit integers."""
         return super().__new__(cls, _arr, np.int64).view(cls)
 
 
@@ -254,9 +263,8 @@ class ArrayBIGINT(TypedNDArray):
 class ArrayINT(TypedNDArray):
     """Array of integers, any precision supported by numpy."""
 
-    def __new__(  # ruff: ignore[undocumented-public-method]
-        cls, _arr: Sequence[int | Sequence[int]] | NDArray[np.integer]
-    ) -> Self:
+    def __new__(cls, _arr: Sequence[int | Sequence[int]] | NDArray[np.integer]) -> Self:
+        """Array of integers, any precision supported by numpy."""
         _dtype = _arr.dtype if hasattr(_arr, "dtype") else np.int64
         if not np.issubdtype(_dtype, np.integer):
             raise ValueError(f"Array type, {_dtype!r}, is not an integer type.")
@@ -267,9 +275,8 @@ class ArrayINT(TypedNDArray):
 class ArrayMPFloat(TypedNDArray):
     """Array of arbitrary-precision floats, mpmath.mpf()s."""
 
-    def __new__(  # ruff: ignore[undocumented-public-method]
-        cls, _arr: Sequence[MPFloat | Sequence[MPFloat]] | np.ndarray
-    ) -> Self:
+    def __new__(cls, _arr: Sequence[MPFloat | Sequence[MPFloat]] | np.ndarray) -> Self:
+        """Array of arbitrary-precision floats, mpmath.mpf()s."""
         if not hasattr(next(np.asarray(_arr).flat), "mpf_convert_arg"):
             raise ValueError("Data array cannot be converted to ArrayMPFloat.")
         return super().__new__(cls, _arr, np.object_).view(cls)
@@ -279,9 +286,8 @@ class ArrayMPFloat(TypedNDArray):
 class ArrayUINT8(TypedNDArray):
     """Array of 8-bit unsigned integers."""
 
-    def __new__(  # ruff: ignore[undocumented-public-method]
-        cls, _arr: NDArray[np.uint8]
-    ) -> Self:
+    def __new__(cls, _arr: NDArray[np.uint8]) -> Self:
+        """Array of 8-bit unsigned integers."""
         return super().__new__(cls, _arr, np.uint8).view(cls)
 
 

@@ -108,6 +108,7 @@ class GuidelinesStandards:
                 f"Must be one of, {_p}."
             )
 
+    # pyrefly: ignore[bad-assignment]
     safeharbor: MGThresholds = field(kw_only=True, default=None, init=False)
     """
     Negative presumption quantified on various measures.
@@ -116,6 +117,7 @@ class GuidelinesStandards:
     diversion ratio limit, CMCR, and IPR.
     """
 
+    # pyrefly: ignore[bad-assignment]
     presumption: MGThresholds = field(kw_only=True, default=None, init=False)
     """
     Presumption of harm specified in Guidelines.
@@ -124,6 +126,7 @@ class GuidelinesStandards:
     diversion ratio limit, CMCR, and IPR.
     """
 
+    # pyrefly: ignore[bad-assignment]
     imputed_presumption: MGThresholds = field(kw_only=True, default=None, init=False)
     """
     Presumption of harm imputed from Guidelines.
@@ -355,8 +358,10 @@ class DiversionBoundary:
             )
         elif self.recapture_form is None:
             object.__setattr__(self, "recapture_form", RECForm.INOUT)
+            # pyrefly: ignore[bad-assignment]
             upp_agg_kwargs |= {"recapture_form": "inside-out"}
         else:
+            # pyrefly: ignore[bad-assignment]
             upp_agg_kwargs |= {"recapture_form": self.recapture_form.value}
 
         match self.aggregator:
@@ -370,6 +375,7 @@ class DiversionBoundary:
                 upp_agg_kwargs |= {"dps": 10}
             case UPPAggregator.DIS:
                 upp_agg_fn = gbfn.diversion_share_boundary_wtd_avg
+                # pyrefly: ignore[bad-assignment]
                 upp_agg_kwargs |= {"aggregator": "distance", "weighting": None}
             case _:
                 upp_agg_fn = gbfn.diversion_share_boundary_wtd_avg

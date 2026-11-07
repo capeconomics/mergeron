@@ -24,8 +24,8 @@ repos:
       entry: ruff format src/
       language: system
       types_or: [ python, pyi, jupyter ]
-    - id: mypy
-      name: mypy
+    - id: pyrefly-check
+      name: Run type-checker
       language: system
       types: [python]
-      entry: mypy
+      entry: pyrefly check src/

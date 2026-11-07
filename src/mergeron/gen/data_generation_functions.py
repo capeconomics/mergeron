@@ -627,6 +627,7 @@ def prices_sampler(
         pcm_array, mnl_test = _margins_sampler(
             _pcm_spec,
             _price_spec,
+            # pyrefly: ignore[bad-argument-type]
             price_array,
             _market_shares,
             _aggr_purch_prob,

@@ -65,10 +65,14 @@ def prng(_s: SeedSequence | None = None, /) -> np.random.Generator:
 # Add yaml representer, constructor for SeedSequence
 (_, _) = (
     YAML.representer.add_representer(
-        SeedSequence, lambda _r, _d: _r.represent_mapping("!SeedSequence", _d.state)
+        SeedSequence,
+        # pyrefly: ignore[implicit-any-lambda]
+        lambda _r, _d: _r.represent_mapping("!SeedSequence", _d.state),
     ),
     YAML.constructor.add_constructor(
-        "!SeedSequence", lambda _c, _n, /: SeedSequence(**yaml_rt_mapper(_c, _n))
+        "!SeedSequence",
+        # pyrefly: ignore[implicit-any-lambda]
+        lambda _c, _n, /: SeedSequence(**yaml_rt_mapper(_c, _n)),
     ),
 )
 
@@ -148,11 +152,11 @@ def seed_sequencer(
 def _parms_converter(_v: ArrayLike | None, _i: MultithreadedRNG) -> ArrayFloat:
     if (
         _v is None
-        or not len(_v)  # type: ignore
+        or not len(_v)  # pyrefly: ignore[bad-argument-type]
         or not (
             _v.any()
             if isinstance(_v, np.ndarray)
-            else (_v[0].any() if hasattr(_v, "len") else _v)  # type: ignore[index, union-attr]
+            else (_v[0].any() if hasattr(_v, "len") else _v)  # pyrefly: ignore[bad-index, missing-attribute]
         )
     ):
         return {
@@ -161,6 +165,7 @@ def _parms_converter(_v: ArrayLike | None, _i: MultithreadedRNG) -> ArrayFloat:
             "Normal": DEFAULT_DIST_PARMS,
             "Uniform": DEFAULT_DIST_PARMS,
         }.get(_i.distribution, DEFAULT_DIST_PARMS)
+    # pyrefly: ignore[implicit-any-type-argument]
     elif isinstance(_v, Sequence | np.ndarray):
         return ArrayFloat(np.asarray(_v, float))
     else:
@@ -235,6 +240,7 @@ class MultithreadedRNG:
 
         This function calls the single-threaded version below.
         """
+        _distribution = self.distribution
         if not len(self.parameters) or np.array_equal(
             self.parameters, DEFAULT_DIST_PARMS
         ):
@@ -242,8 +248,6 @@ class MultithreadedRNG:
                 _distribution: RVDistType = "Random"
             elif self.distribution == "Normal":
                 _distribution = "Gaussian"
-        else:
-            _distribution = self.distribution
 
         _nthreads = self.nthreads
 

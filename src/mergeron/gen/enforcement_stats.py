@@ -19,7 +19,7 @@ from ..core import INVData
 from ..core import INVTableData
 from . import YAML
 from . import INVResolution
-from . import StatsGroup
+from . import StatsGroup as StatsGroup
 
 
 @YAML.register_class
@@ -116,6 +116,7 @@ def enforcement_counts_observed(
 
     _data_array = _data_array_dict_sub[_table_no].data_array
 
+    # pyrefly: ignore[implicit-any-empty-container]
     stats_kept_indxs = []
     match _enf_spec:
         case INVResolution.CLRN:

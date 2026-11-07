@@ -70,10 +70,12 @@ def dh_area(_delta_bound: float | MPFloat = 0.01, /, *, dps: int = 9) -> float:
 
     """
     _delta_bound = mpf(f"{_delta_bound}")
+    # pyrefly: ignore[unsupported-operation]
     _s_naught = (1 - mp.sqrt(1 - 2 * _delta_bound)) / 2
 
     return round(
         float(
+            # pyrefly: ignore[unsupported-operation]
             _s_naught + (_delta_bound / 2) * (mp.ln(1 - _s_naught) - mp.ln(_s_naught))
         ),
         dps,
@@ -81,7 +83,7 @@ def dh_area(_delta_bound: float | MPFloat = 0.01, /, *, dps: int = 9) -> float:
 
 
 def hhi_delta_boundary(
-    _delta_bound: float | decimal.Decimal | MPFloat = 0.01, /, *, dps: int = 5
+    _delta_bound: float | MPFloat = 0.01, /, *, dps: int = 5
 ) -> GuidelinesBoundary:
     """
     Generate the list of share combination on the ΔHHI boundary.
@@ -99,8 +101,8 @@ def hhi_delta_boundary(
 
     """
     _delta_bound = mpf(f"{_delta_bound}")
-    _s_naught = 1 / 2 * (1 - mp.sqrt(1 - 2 * _delta_bound))
-    _s_mid = mp.sqrt(_delta_bound / 2)
+    _s_naught = 1 / 2 * (1 - mp.sqrt(1 - mp.fmul("2", _delta_bound)))
+    _s_mid = mp.sqrt(mp.fdiv(_delta_bound, "2"))
 
     _step_size = mp.power(10, -6)
     _s_1 = np.array(mp.arange(_s_mid, _s_naught - mp.eps, -_step_size))
@@ -134,7 +136,7 @@ def hhi_pre_contrib_boundary(
 
     """
     _hhi_bound = mpf(f"{_hhi_bound}")
-    _s_mid = mp.sqrt(_hhi_bound / 2)
+    _s_mid = mp.sqrt(mp.fdiv(_hhi_bound, "2"))
 
     step_size = mp.power(10, -dps)
     # Range-limit is 0 less a step, which is -1 * step-size
@@ -171,7 +173,7 @@ def combined_share_boundary(
 
     """
     _s_intcpt = mpf(f"{_s_intcpt}")
-    _s_mid = _s_intcpt / 2
+    _s_mid = mp.fdiv(_s_intcpt, "2")
 
     _s1 = np.array([0, _s_mid, _s_intcpt], float)
     return GuidelinesBoundary(
@@ -203,6 +205,7 @@ def hhi_post_contrib_boundary(
     return combined_share_boundary(
         _hhi_bound.sqrt()
         if isinstance(_hhi_bound, decimal.Decimal | mpf)
+        # pyrefly: ignore[no-matching-overload]
         else np.sqrt(_hhi_bound),
         dps=dps,
     )
@@ -657,7 +660,7 @@ def _diversion_share_boundary_intcpt(
 ) -> float:
     match weighting:
         case "cross-product-share":
-            _s_intcpt: float = _delta_star
+            _s_intcpt = _delta_star
         case "own-share":
             _s_intcpt = mpf("1.0")
         case None if aggregator == "distance":
@@ -665,16 +668,18 @@ def _diversion_share_boundary_intcpt(
         case None if aggregator == "arithmetic mean" and recapture_form == "inside-out":
             _s_intcpt = mp.fdiv(
                 mp.fsub(
-                    2 * _delta_star * _r_val + 1, mp.fabs(2 * _delta_star * _r_val - 1)
+                    (_d := mp.fprod((2, _delta_star, _r_val))) + 1, mp.fabs(_d - 1)
                 ),
                 2 * mpf(f"{_r_val}"),
             )
         case None if aggregator == "arithmetic mean" and recapture_form == "fixed":
-            _s_intcpt = mp.fsub(_delta_star + 1 / 2, mp.fabs(_delta_star - 1 / 2))
+            _s_intcpt = mp.fsub(
+                mp.fadd(_delta_star, 1 / 2), mp.fabs(mp.fsub(_delta_star, 1 / 2))
+            )
         case _:
             _s_intcpt = s_2_pre
 
-    return _s_intcpt
+    return float(_s_intcpt)
 
 
 def lerp[LerpT: (float, MPFloat, ArrayDouble)](

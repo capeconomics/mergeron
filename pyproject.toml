@@ -82,32 +82,7 @@ doc = [
   "sphinx-autodoc-typehints",
   "sphinx-immaterial",
 ]
-lint = ["mypy", "ruff"]
-
-[tool.mypy]
-exclude = ["tests/", ".venv/"]
-
-strict = true
-pretty = true
-
-cache_fine_grained = true
-fixed_format_cache = true
-
-enable_incomplete_feature = ["PreciseTupleTypes"]
-disable_error_code = ["import-untyped"]
-
-ignore_missing_imports = false
-
-strict_equality = true
-strict_equality_for_none = true
-local_partial_types = true
-no_implicit_optional = true
-no_implicit_reexport = false
-
-warn_redundant_casts = true
-allow_redefinition_new = true
-
-warn_unreachable = true
+lint = ["pyrefly", "ruff"]
 
 [tool.ruff]
 # Same as Black.
@@ -190,6 +165,7 @@ ignore = [
   "non-empty-init-module",                 # we define package/subpackage types and constants in __init__.py files
   "rule-codes-in-suppression-comments",    # rule codes are harder to read but more compact; lookup not too hard
   "suspicious-subprocess-import",          # accept subprocess module
+  "useless-import-alias",                  # no-implicit-reexport requires these
   # flake8-type-checking
   "relative-imports", # we use relative imports - repeated patterns, flexible to name-changes
   # pyupgrade
@@ -266,3 +242,23 @@ no-build = true
 
 [tool.uv_build]
 src-layout = true
+
+[tool.pyrefly]
+project-excludes = ["**/tests/", "**/.venv/"]
+preset = "strict"
+check-unannotated-defs = true
+infer-return-types = "never"
+
+[tool.pyrefly.errors]
+untyped-import = "ignore"
+no-any-return = "error"
+implicit-any-parameter = "error"
+unannotated-return = "error"
+method-assign = "error"
+redundant-cast = "warn"
+implicit-any = "error"
+incompatible-comparison = "error"
+unnecessary-comparison = "error"
+unreachable = "warn"
+redefinition = "ignore"
+implicit-reexport = "warn"

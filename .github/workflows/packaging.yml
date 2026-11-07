@@ -32,7 +32,7 @@ jobs:
 
       - name: Run type checker
         run: |
-          mypy ./src
+          pyrefly check ./src
 
   test-package:
     needs:

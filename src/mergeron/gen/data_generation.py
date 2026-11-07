@@ -20,6 +20,8 @@ from numpy.random import SeedSequence
 
 if TYPE_CHECKING:
     from ruamel import yaml
+    from ruamel.yaml import constructor
+    from ruamel.yaml import representer
 
     from ..core import MGThresholds
 
@@ -296,6 +298,7 @@ class MarketSample:
             "dataset",
             MarketsData(**{
                 _k.name: np.vstack([getattr(_j, _k.name) for _j in _res_list])
+                # pyrefly: ignore[missing-attribute]
                 for _k in MarketsData.__attrs_attrs__
             }),
         )
@@ -429,13 +432,14 @@ class MarketSample:
 
     @classmethod
     def to_yaml(
-        cls, _r: yaml.representer.RoundTripRepresenter, _d: MarketSample
+        cls, _r: representer.RoundTripRepresenter, _d: MarketSample
     ) -> yaml.MappingNode:
         """Serialize market sample to YAML representation."""
         retval: yaml.MappingNode = _r.represent_mapping(
             f"!{cls.__name__}",
             {
                 _a.name: getattr(_d, _a.name)
+                # pyrefly: ignore[missing-attribute]
                 for _a in _d.__attrs_attrs__
                 if _a.name not in {"dataset", "enforcement_counts"}
             },
@@ -444,7 +448,7 @@ class MarketSample:
 
     @classmethod
     def from_yaml(
-        cls, _c: yaml.constructor.RoundTripConstructor, _n: yaml.MappingNode
+        cls, _c: constructor.RoundTripConstructor, _n: yaml.MappingNode
     ) -> MarketSample:
         """Deserialize market sample from YAML representation."""
         return cls(**yaml_rt_mapper(_c, _n))
@@ -543,6 +547,7 @@ def _ll_setup(
                         _s.spawn(_iter_count) if _s else [None] * _iter_count
                         for _s in (
                             getattr(_seed_data, _a.name)
+                            # pyrefly: ignore[missing-attribute]
                             for _a in _seed_data.__attrs_attrs__
                         )
                     ],
@@ -610,14 +615,14 @@ def _markets_sampler(
     if _shr_scale > 1.0:
         mnl_test_rows = mnl_test * hsr_filing_test
 
-        mktshr_array = mktshr_array[mnl_test_rows]
-        pcm_array = pcm_array[mnl_test_rows]
-        price_array = price_array[mnl_test_rows]
+        mktshr_array = mktshr_array[mnl_test_rows].view(ArrayDouble)
+        pcm_array = pcm_array[mnl_test_rows].view(ArrayDouble)
+        price_array = price_array[mnl_test_rows].view(ArrayDouble)
         aggr_choice_prob = (
             aggr_choice_prob
             if _market_sample.share_spec.recapture_form == RECForm.FIXED
             else aggr_choice_prob[mnl_test_rows]
-        )
+        ).view(ArrayDouble)
 
         del mnl_test_rows
 
@@ -734,7 +739,7 @@ def _recapture_hmt(
 
     return (
         _hmt_product_flag_from_opportunity_cost(
-            guppi_1,
+            guppi_1,  # pyrefly: ignore[bad-argument-type]
             divratio_1j,
             passthru_rate=_hmt_flag.passthrough_rate,
             SSNIP=_hmt_flag.ssnip_level,

@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 from .. import DEFAULT_REC
 from .. import EMPTY_ARRAYDOUBLE
 from .. import EMPTY_ARRAYUINT8 as EMPTY_ARRAYUINT8
-from .. import YAML
+from .. import YAML as YAML
 from .. import ArrayBIGINT
 from .. import ArrayBoolean as ArrayBoolean
 from .. import ArrayDouble
@@ -276,6 +276,7 @@ def _shr_dp_conv(_v: Sequence[float] | ArrayFloat | None, _i: ShareSpec) -> Arra
                     raise ValueError(
                         f"Unsupported distribution for market share generation, {_i.distribution!r}"
                     )
+    # pyrefly: ignore[implicit-any-type-argument]
     elif isinstance(_v, Sequence | np.ndarray):
         retval = np.asarray(_v, float)
     else:
@@ -495,6 +496,7 @@ def _pcm_parms_conv(
                 return DEFAULT_BETA_DIST_PARMS
             case _:
                 return DEFAULT_DIST_PARMS
+    # pyrefly: ignore[implicit-any-type-argument]
     elif isinstance(_v, Sequence | np.ndarray):
         return ArrayFloat(np.array(_v, float) if isinstance(_v, Sequence) else _v)
     else:
@@ -674,6 +676,7 @@ class MarketsData:
         """Save market sample data to HDF5 file."""
         byte_stream = io.BytesIO()
         with h5py.File(byte_stream, "w") as _h5f:
+            # pyrefly: ignore[missing-attribute]
             for _a in self.__attrs_attrs__:
                 if all(((_arr := getattr(self, _a.name)).any(),)):
                     _h5f.create_dataset(

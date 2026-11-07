@@ -54,7 +54,7 @@ def dh_area_quad(_dh_val: float = 0.01, /) -> float:
     return float(
         mp.nstr(
             _s_naught
-            + mp.quad(lambda x: _dh_val / (2 * x), [_s_naught, 1 - _s_naught]),
+            + mp.quad(lambda x: _dh_val / (2 * x), [_s_naught, 1 - _s_naught]),  # pyrefly: ignore[implicit-any-lambda]
             mp.prec,
         )
     )
@@ -609,8 +609,8 @@ def _diversion_share_boundary_wtd_avg_autoroot(
     for s_1 in mp.arange(_s_mid - _step_size, 0, -_step_size):
 
         def delta_test(x: MPFloat) -> MPFloat:
-            _de_1 = x / (1 - s_1)
-            _de_2 = (
+            _de_1: MPFloat = x / (1 - s_1)
+            _de_2: MPFloat = (
                 s_1 / (1 - gbf.lerp(s_1, x, _r_val))
                 if recapture_form == "inside-out"
                 else s_1 / (1 - x)
@@ -627,10 +627,13 @@ def _diversion_share_boundary_wtd_avg_autoroot(
                         gbf.lerp(mp.log1p(_de_1), mp.log1p(_de_2), _w)
                     )
                 case "distance":
-                    delta_test = mp.sqrt(gbf.lerp(_de_1**2, _de_2**2, _w))
+                    delta_test = mp.sqrt(
+                        gbf.lerp(mp.power(_de_1, 2), mp.power(_de_2, 2), _w)
+                    )
                 case _:
                     delta_test = gbf.lerp(_de_1, _de_2, _w)
 
+            # pyrefly: ignore[no-any-return-implicit]
             return _delta_star - delta_test
 
         try:

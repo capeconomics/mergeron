@@ -215,7 +215,7 @@ def _upp_test_counts(
     enf_cnts_sim_byfirmcount_array = (
         compute_enforcement_counts(
             ArrayBIGINT(
-                np.hstack((_fcounts, np.ones_like(_fcounts, int), upp_test_arrays))
+                np.hstack((_fcounts, np.ones_like(_fcounts, int), upp_test_arrays))  # pyrefly: ignore[bad-argument-type]
             ),
             StatsGroup.FC,
         )
@@ -226,6 +226,7 @@ def _upp_test_counts(
     # Clearance counts by ΔHHI
     enf_cnts_sim_bydelta_array = compute_enforcement_counts(
         ArrayBIGINT(
+            # pyrefly: ignore[bad-argument-type]
             np.hstack((
                 ArrayBIGINT(esl.hhi_delta_ranger(_hhi_delta)),
                 np.ones_like(_hhi_delta, int),
@@ -241,7 +242,7 @@ def _upp_test_counts(
         if (not _hhi_post.size) or np.isnan(next(_hhi_post.flat))
         else compute_enforcement_counts(
             ArrayBIGINT(
-                np.hstack((
+                np.hstack((  # pyrefly: ignore[bad-argument-type]
                     ArrayBIGINT(esl.hhi_post_ranger(_hhi_post)),
                     ArrayBIGINT(esl.hhi_delta_ranger(_hhi_delta)),
                     np.ones_like(_hhi_post, int),
