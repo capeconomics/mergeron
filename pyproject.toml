@@ -245,8 +245,9 @@ src-layout = true
 [tool.pyrefly]
 project-excludes = ["**/tests/", "**/.venv/"]
 preset = "strict"
-check-unannotated-defs = true
 infer-return-types = "never"
+strict-callable-subtyping = true
+treat-all-caps-as-final = true
 
 [tool.pyrefly.errors]
 untyped-import = "ignore"
@@ -261,3 +262,6 @@ unnecessary-comparison = "error"
 unreachable = "warn"
 redefinition = "ignore"
 implicit-reexport = "warn"
+unexpected-never = "error"
+protected-access = "error"
+invalid-format-spec = "error"
