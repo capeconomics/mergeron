@@ -63,9 +63,6 @@ class GuidelinesBoundary:
     """Area under the boundary."""
 
 
-WORK_DIR = globals().get("WORK_DIR", PKG_WORK_DIR)
-"""Redefined, in case the user defines WORK_DIR between module imports."""
-
 FID_WORK_DIR = WORK_DIR / "FTCData"
 if not FID_WORK_DIR.is_dir():
     FID_WORK_DIR.mkdir(parents=True)
