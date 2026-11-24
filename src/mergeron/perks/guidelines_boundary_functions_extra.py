@@ -49,13 +49,14 @@ def dh_area_quad(_dh_val: float = 0.01, /) -> float:
 
     """
     _dh_val = mpf(f"{_dh_val}")
-    _s_naught = (1 - mp.sqrt(1 - 2 * _dh_val)) / 2
+    _s_0 = (1 - mp.sqrt(1 - 2 * _dh_val)) / 2
 
     return float(
-        mp.nstr(
-            _s_naught
-            + mp.quad(lambda x: _dh_val / (2 * x), [_s_naught, 1 - _s_naught]),  # pyrefly: ignore[implicit-any-lambda]
-            mp.prec,
+        _s_0
+        + mp.quad(
+            # pyrefly: ignore[implicit-any-lambda]
+            lambda x: _dh_val / (2 * x),
+            [_s_0, 1 - _s_0],
         )
     )
 
@@ -81,21 +82,13 @@ def hhi_delta_boundary_qdtr(_dh_val: float = 0.01, /) -> GuidelinesBoundaryCalla
     _hhi_eqn = _s_2 - _dh_val / (2 * _s_1)
 
     hhi_bdry = solve(_hhi_eqn, _s_2)[0]
-    s_nought = float(solve(_hhi_eqn.subs({_s_2: 1 - _s_1}), _s_1)[0])
-
-    hhi_bdry_area = float(
-        mp.nstr(
-            2
-            * (
-                s_nought
-                + mp.quad(lambdify(_s_1, hhi_bdry, "mpmath"), (s_nought, 1 - s_nought))
-            ),
-            mp.prec,
-        )
+    _s_lims = solve(_hhi_eqn.subs({_s_2: 1 - _s_1}), _s_1)
+    _bdry_area = float(
+        _s_lims[0] + mp.quad(lambdify(_s_1, hhi_bdry, "mpmath"), _s_lims)
     )
 
     return GuidelinesBoundaryCallable(
-        lambdify(_s_1, hhi_bdry, "numpy"), hhi_bdry_area, s_nought
+        lambdify(_s_1, hhi_bdry, "numpy"), _bdry_area, float(_s_lims[0])
     )
 
 
@@ -129,7 +122,7 @@ def diversion_share_boundary_qdtr_wtd_avg(
     """
     _delta_star, _r_val = (mpf(_v) for _v in (f"{_delta_star}", f"{_r_val}"))
     _s_mid = _delta_star / (1 + _delta_star)
-    s_naught = mpf("0.0")
+    s_0 = mpf("0.0")
 
     s_1, s_2 = symbols("s_1:3", positive=True)
 
@@ -150,15 +143,15 @@ def diversion_share_boundary_qdtr_wtd_avg(
             _bdry_func = solve(_bdry_eqn, s_2)[0]
 
             if recapture_form == "inside-out":
-                s_naught = mpf(solve(simplify(_bdry_eqn.subs({s_2: 1 - s_1})), s_1)[0])
+                s_0 = mpf(solve(simplify(_bdry_eqn.subs({s_2: 1 - s_1})), s_1)[0])
 
-            bdry_area = mp.fmul(
-                "2",
-                (
-                    s_naught
-                    + mp.quad(lambdify(s_1, _bdry_func, "mpmath"), (s_naught, _s_mid))
-                ),
-            ) - (_s_mid**2 + s_naught**2)
+            bdry_area = float(
+                mp.fmul(
+                    2,
+                    (s_0 + mp.quad(lambdify(s_1, _bdry_func, "mpmath"), (s_0, _s_mid))),
+                )
+                - (_s_mid**2 + s_0**2)
+            )
 
         case "cross-product-share":
             mp.trap_complex = False
@@ -176,13 +169,15 @@ def diversion_share_boundary_qdtr_wtd_avg(
             )
 
             _bdry_func = solve(_bdry_eqn, s_2)[1]
-            bdry_area = (
+            bdry_area = float(
                 mp.fmul(
-                    "2",
+                    2,
                     mp.quad(
-                        lambdify(s_1, _bdry_func.subs({d_star: _delta_star}), "mpmath"),
+                        lambdify(
+                            s_1, _bdry_func.subs({d_star: _delta_star}), "mpmath"
+                        ).real,
                         (0, _s_mid),
-                    ).real,
+                    ),
                 )
                 - _s_mid**2
             )
@@ -202,13 +197,13 @@ def diversion_share_boundary_qdtr_wtd_avg(
             )
 
             _bdry_func = solve(_bdry_eqn, s_2)[0]
-            bdry_area = (
+            bdry_area = float(
                 mp.fmul("2", mp.quad(lambdify(s_1, _bdry_func, "mpmath"), (0, _s_mid)))
                 - _s_mid**2
             )
 
     return GuidelinesBoundaryCallable(
-        lambdify(s_1, _bdry_func, "numpy"), float(bdry_area), float(s_naught)
+        lambdify(s_1, _bdry_func, "numpy"), bdry_area, float(s_0)
     )
 
 
@@ -354,13 +349,13 @@ def diversion_share_boundary_distance(
             _bdry_step_sz * (4 * s_2_oddsum + 2 * s_2_evnsum + _s_mid + s_intcpt) / 3
         )
         # Area under boundary
-        bdry_area_total = 2 * bdry_prtlarea - mp.power(_s_mid, "2")
+        bdry_area_total = float(2 * bdry_prtlarea - mp.power(_s_mid, 2))
 
     bdry_points.append((mpf("0.0"), s_intcpt))
     # Points defining boundary to point-of-symmetry
     return GuidelinesBoundary(
         np.asarray(np.vstack((bdry_points[::-1], np.flip(bdry_points[1:], 1))), float),
-        round(float(bdry_area_total), dps),
+        round(bdry_area_total, dps),
     )
 
 
@@ -501,13 +496,18 @@ def diversion_share_boundary_xact_avg_mp(
     bdry_evns = np.array(range(2, len(s_2), 2), int)
 
     # Double the area under the half-curve, and subtract the double-counted bit.
-    bdry_area_simpson = 2 * _bdry_step_sz * (
-        (4 / 3) * np.sum(s_2.take(bdry_odds))
-        + (2 / 3) * np.sum(s_2.take(bdry_evns))
-        + (1 / 3) * np.sum(s_2.take(bdry_ends))
-    ) - mp.power(_s_mid, 2)
+    bdry_area_simpson = float(
+        2
+        * _bdry_step_sz
+        * (
+            (4 / 3) * np.sum(s_2.take(bdry_odds))
+            + (2 / 3) * np.sum(s_2.take(bdry_evns))
+            + (1 / 3) * np.sum(s_2.take(bdry_ends))
+        )
+        - mp.power(_s_mid, 2)
+    )
 
-    return GuidelinesBoundary(bdry, float(mp.nstr(bdry_area_simpson, dps)))
+    return GuidelinesBoundary(bdry, bdry_area_simpson)
 
 
 # diversion_share_boundary_wtd_avg_autoroot
@@ -692,7 +692,7 @@ def _diversion_share_boundary_wtd_avg_autoroot(
             _step_size * (4 * s_2_oddsum + 2 * s_2_evnsum + _s_mid + _s_intcpt) / 3
         )
         # Area under boundary
-        bdry_area_total = float(2 * gbd_prtlarea - mp.power(_s_mid, "2"))
+        bdry_area_total = float(2 * gbd_prtlarea - mp.power(_s_mid, 2))
 
     bdry.append((mpf("0.0"), _s_intcpt))
     bdry_array = np.array(bdry, float)
@@ -700,5 +700,5 @@ def _diversion_share_boundary_wtd_avg_autoroot(
     # Points defining boundary to point-of-symmetry
     return GuidelinesBoundary(
         np.vstack((bdry_array[::-1], bdry_array[1:, ::-1]), dtype=float),
-        round(float(bdry_area_total), dps),
+        round(bdry_area_total, dps),
     )
