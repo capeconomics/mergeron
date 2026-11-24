@@ -103,7 +103,6 @@ def _update_version(_update_level: str) -> None:
         [
             GIT_CMD,
             "commit",
-            "--no-verify",
             f"{_license_path}",
             f"{PROJ_DIR / '.pre-commit-config.yaml'}",
             f"{PROJ_DIR / 'uv.lock'}",
