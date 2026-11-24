@@ -192,17 +192,12 @@ class Enameled(enum.Enum):
     @classmethod
     def to_yaml(cls, _r: yaml.RoundTripRepresenter, _d: enum.Enum) -> yaml.ScalarNode:
         """Serialize enumerations by .name, not .value."""
-        return _r.represent_scalar(
-            # pyrefly: ignore[bad-argument-type]
-            f"!{super().__getattribute__(cls, '__name__')}",
-            f"{_d.name}",
-        )
+        return _r.represent_scalar(f"!{cls.__name__}", f"{_d.name}")
 
     @classmethod
     def from_yaml(
         cls, _c: yaml.RoundTripConstructor, _n: yaml.ScalarNode
     ) -> enum.EnumType:
         """Deserialize enumeration serialized by .name."""
-        # pyrefly: ignore[bad-argument-type]
-        retval: enum.EnumMeta = super().__getattribute__(cls, _n.value)
+        retval: enum.EnumMeta = getattr(cls, _n.value)
         return retval
