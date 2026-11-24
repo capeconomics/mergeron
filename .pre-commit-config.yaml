@@ -28,4 +28,4 @@ repos:
       name: Run type-checker
       language: system
       types: [python]
-      entry: pyrefly check src/
+      entry: pyrefly check --project-excludes=tests/ src/
