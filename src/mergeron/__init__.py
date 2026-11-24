@@ -142,11 +142,12 @@ class TypedNDArray(np.ndarray):
     def __new__(
         cls,
         _arr: Sequence[
-            bool | float | int | MPFloat | Sequence[bool | float | int | MPFloat]
+            float | bool | int | MPFloat | Sequence[float | bool | int | MPFloat]
         ]
-        | NDArray[np.bool | np.floating | np.integer | np.uint8]
+        | NDArray[np.floating | np.bool | np.integer | np.object_]
         | MPMatrix,
-        _type: bool | float | object | np.bool | np.floating | np.integer | np.uint8,
+        _ndtype: type[float | int | object]
+        | np.dtype[np.floating | np.bool | np.integer | np.object_],
         /,
         *,
         info: dict[str, Any] | None = None,
@@ -155,36 +156,54 @@ class TypedNDArray(np.ndarray):
         if not hasattr(_arr, "__len__") or isinstance(_arr, str):
             raise ValueError(f"Invalid first argument, {_arr!r}")
 
-        if _type in {np.floating, np.integer}:
-            # pyrefly: ignore[no-matching-overload]
-            _dtype = type(np.ravel(_arr)[0])
-        elif isinstance(_arr, MPMatrix):
-            _dtype = object
-            _arr = _arr.tolist()
-        elif _type is MPFloat:
-            _dtype = object
-        else:
-            _dtype = _type
-
-        # pyrefly: ignore[no-matching-overload]
-        if not len(np.ravel(_arr)):
-            # pyrefly: ignore[no-matching-overload]
-            _arr = np.array([], dtype=_dtype)
+        _ndarr = (
+            _arr
+            if isinstance(_arr, np.ndarray)
+            else np.array(_arr.tolist() if isinstance(_arr, MPMatrix) else _arr)
+        )
+        if (
+            _ndtype in {np.float64, np.bool, np.int64, np.uint8, np.object_}
+            or _ndarr.size == 1
+            or not _ndarr.size
+        ):
+            _dtype = _ndtype
         elif (
-            np.asarray(_arr).shape
-            and isinstance(_arr[0], Sequence | np.ndarray)  # pyrefly: ignore[implicit-any-type-argument]
-            and isinstance(np.ravel(_arr)[0], MPFloat)  # type: ignore[misc]
-            and not ((_dtype is object) or np.issubdtype(_dtype, np.floating))  # type: ignore[arg-type]
+            _ndarr.size > 1 and isinstance(np.ravel(_ndarr)[1], MPFloat)
+        ) or isinstance(_ndarr[0], MPFloat):
+            if np.issubdtype(_ndtype, np.floating):
+                _dtype = np.float64
+            elif _ndtype == np.object_:
+                _dtype = _ndtype
+            else:
+                raise ValueError(
+                    f"Array of MPFloats cannot be converted to array of type, {_ndtype!r}."
+                )
+        elif any(np.issubdtype(_ndtype, _d) for _d in (np.floating, np.integer)):
+            _dtype = _ndarr.dtype
+        elif isinstance(_arr, MPMatrix):
+            _dtype = np.object_
+        else:
+            _dtype = _ndtype
+
+        if _ndarr.size == 1 or not _ndarr.size:
+            _ndarr = np.asarray(_ndarr, _dtype)
+        elif isinstance(np.ravel(_ndarr)[1], MPFloat) and not any(
+            np.issubdtype(_dtype, _d) for _d in (np.object_, np.floating)
         ):
             raise ValueError(
                 "Array of MPFloat objects can only be converted to "
-                f"ArrayFloat, ArrayDouble, or ArrayMPFloat, not {_type!r}."
+                f"ArrayFloat, ArrayDouble, or ArrayMPFloat, not {_ndtype!r}."
             )
-        elif not np.issubdtype((_dt := np.asarray(_arr, _dtype).dtype), _dtype):  # type: ignore[arg-type]
+        elif not np.issubdtype((_dt := np.asarray(_arr, _dtype).dtype), _ndtype):
+            print()
             raise ValueError(
-                f"Array type, {_dt!r}, is not compatible with target dtype, {_type}."
+                "\n".join((
+                    f"Array is, {type(np.ravel(_ndarr)[1])}",
+                    f"Final type is, {_dtype!r}",
+                    f"Specified type is , {_ndtype!r}",
+                    f"Array type, {_dt!r}, is not compatible with target dtype, {_ndtype}.",
+                ))
             )
-        # pyrefly: ignore[no-matching-overload]
         obj = np.asarray(_arr, _dtype).view(cls)
         obj.info = info
         return obj
@@ -201,11 +220,7 @@ class TypedNDArray(np.ndarray):
         cls, _r: yaml.RoundTripRepresenter, _d: np.ndarray
     ) -> yaml.SequenceNode:
         """Serialize TypedNDArray."""
-        return _r.represent_sequence(
-            # pyrefly: ignore[bad-argument-type]
-            f"!{super().__getattribute__(cls, '__name__')}",
-            (_d.tolist(), _d.dtype.str),
-        )
+        return _r.represent_sequence(f"!{cls.__name__}", (_d.tolist(), _d.dtype.str))
 
     @classmethod
     def from_yaml(
@@ -220,7 +235,7 @@ class TypedNDArray(np.ndarray):
 class ArrayBoolean(TypedNDArray):
     """Array of booleans."""
 
-    def __new__(cls, _arr: Sequence[bool | Sequence[bool]] | NDArray[np.bool_]) -> Self:
+    def __new__(cls, _arr: Sequence[bool | Sequence[bool]] | NDArray[np.bool]) -> Self:
         """Array of booleans."""
         return super().__new__(cls, _arr, np.bool).view(cls)
 
@@ -230,10 +245,22 @@ class ArrayDouble(TypedNDArray):
     """Array of double-precision floats."""
 
     def __new__(
-        cls, _arr: Sequence[float | Sequence[float]] | NDArray[np.float64]
+        cls,
+        _arr: Sequence[float | MPFloat | Sequence[float | MPFloat]]
+        | MPMatrix
+        | NDArray[np.floating]
+        | NDArray[np.object_],
     ) -> Self:
         """Array of double-precision floats."""
-        return super().__new__(cls, _arr, np.float64).view(cls)
+        return (
+            super()
+            .__new__(
+                cls,
+                _arr.tolist() if isinstance(_arr, MPMatrix) else _arr,
+                np.dtype("f8"),
+            )
+            .view(cls)
+        )
 
 
 @instant_yaml.register_class
@@ -241,13 +268,25 @@ class ArrayFloat(TypedNDArray):
     """Array of floats, any precision supported by numpy."""
 
     def __new__(
-        cls, _arr: Sequence[float | Sequence[float]] | NDArray[np.floating]
+        cls,
+        _arr: Sequence[float | MPFloat | Sequence[float | MPFloat]]
+        | MPMatrix
+        | NDArray[np.floating]
+        | NDArray[np.object_],
     ) -> Self:
         """Array of floats, any precision supported by numpy."""
-        _dtype = _arr.dtype if hasattr(_arr, "dtype") else np.float64
-        if not np.issubdtype(_dtype, np.floating):
-            raise ValueError(f"Array type, {_dtype!r}, is not a float type.")
-        return super().__new__(cls, _arr, _dtype).view(cls)
+        if isinstance(_arr, np.ndarray):
+            _dtype = np.float64 if _arr.dtype == np.object_ else _arr.dtype
+            if not np.issubdtype(_dtype, np.floating):
+                raise ValueError(f"Array type, {_dtype!r}, is not a float type.")
+        else:
+            _dtype = np.float64
+
+        return (
+            super()
+            .__new__(cls, _arr.tolist() if isinstance(_arr, MPMatrix) else _arr, _dtype)
+            .view(cls)
+        )
 
 
 @instant_yaml.register_class
@@ -263,9 +302,9 @@ class ArrayBIGINT(TypedNDArray):
 class ArrayINT(TypedNDArray):
     """Array of integers, any precision supported by numpy."""
 
-    def __new__(cls, _arr: Sequence[int | Sequence[int]] | NDArray[np.integer]) -> Self:
+    def __new__(cls, _arr: Sequence[Sequence[int] | int] | NDArray[np.integer]) -> Self:
         """Array of integers, any precision supported by numpy."""
-        _dtype = _arr.dtype if hasattr(_arr, "dtype") else np.int64
+        _dtype = _arr.dtype if isinstance(_arr, np.ndarray) else np.int64
         if not np.issubdtype(_dtype, np.integer):
             raise ValueError(f"Array type, {_dtype!r}, is not an integer type.")
         return super().__new__(cls, _arr, _dtype).view(cls)
@@ -275,11 +314,23 @@ class ArrayINT(TypedNDArray):
 class ArrayMPFloat(TypedNDArray):
     """Array of arbitrary-precision floats, mpmath.mpf()s."""
 
-    def __new__(cls, _arr: Sequence[MPFloat | Sequence[MPFloat]] | np.ndarray) -> Self:
+    def __new__(
+        cls,
+        _arr: Sequence[MPFloat | Sequence[MPFloat]] | MPMatrix | NDArray[np.object_],
+    ) -> Self:
         """Array of arbitrary-precision floats, mpmath.mpf()s."""
-        if not hasattr(next(np.asarray(_arr).flat), "mpf_convert_arg"):
-            raise ValueError("Data array cannot be converted to ArrayMPFloat.")
-        return super().__new__(cls, _arr, np.object_).view(cls)
+        if not hasattr(np.ravel(np.asarray(_arr))[1], "mpf_convert_arg"):
+            raise ValueError(
+                "Data array cannot be converted to ArrayMPFloat. If appropriate,"
+                "convert the Sequence to mpmath.matrix before calling ArrayMPFloat()."
+            )
+        return (
+            super()
+            .__new__(
+                cls, _arr.tolist() if isinstance(_arr, MPMatrix) else _arr, np.object_
+            )
+            .view(cls)
+        )
 
 
 @instant_yaml.register_class
