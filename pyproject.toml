@@ -230,9 +230,6 @@ description = "install pytest in a virtual environment and invoke"
 package = "wheel"
 wheel_build_env = ".pkg"
 
-[tool.ty.rules]
-all = "ignore"
-
 [tool.uv]
 default-groups = ["dev"]
 
