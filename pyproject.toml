@@ -240,7 +240,7 @@ no-build = true
 src-layout = true
 
 [tool.pyrefly]
-project-excludes = ["**/tests/", "**/.venv/"]
+project-excludes = ["tests/**/*.py", "**/tests/", "**/.venv/"]
 preset = "strict"
 infer-return-types = "never"
 strict-callable-subtyping = true
