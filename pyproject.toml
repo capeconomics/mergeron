@@ -239,6 +239,9 @@ no-build = true
 [tool.uv_build]
 src-layout = true
 
+[tool.ty.rules]
+all = "ignore"
+
 [tool.pyrefly]
 project-excludes = ["tests/**/*.py", "**/tests/", "**/.venv/"]
 preset = "strict"
