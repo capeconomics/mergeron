@@ -70,15 +70,10 @@ def dh_area(_delta_bound: float | MPFloat = 0.01, /, *, dps: int = 9) -> float:
 
     """
     _delta_bound = mpf(f"{_delta_bound}")
-    # pyrefly: ignore[unsupported-operation]
-    _s_naught = (1 - mp.sqrt(1 - 2 * _delta_bound)) / 2
+    _s_0 = (1 - mp.sqrt(1 - mp.fmul(2, _delta_bound))) / 2
 
     return round(
-        float(
-            # pyrefly: ignore[unsupported-operation]
-            _s_naught + (_delta_bound / 2) * (mp.ln(1 - _s_naught) - mp.ln(_s_naught))
-        ),
-        dps,
+        float(_s_0 + mp.fdiv(_delta_bound, 2) * (mp.ln(1 - _s_0) - mp.ln(_s_0))), dps
     )
 
 
@@ -101,11 +96,11 @@ def hhi_delta_boundary(
 
     """
     _delta_bound = mpf(f"{_delta_bound}")
-    _s_naught = 1 / 2 * (1 - mp.sqrt(1 - mp.fmul("2", _delta_bound)))
+    _s_0 = 1 / 2 * (1 - mp.sqrt(1 - mp.fmul("2", _delta_bound)))
     _s_mid = mp.sqrt(mp.fdiv(_delta_bound, "2"))
 
     _step_size = mp.power(10, -6)
-    _s_1 = np.array(mp.arange(_s_mid, _s_naught - mp.eps, -_step_size))
+    _s_1 = np.array(mp.arange(_s_mid, _s_0 - mp.eps, -_step_size))
 
     # Boundary points
     half_bdry = np.vstack((
