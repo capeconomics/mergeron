@@ -11,9 +11,6 @@ mergeron: Python for analyzing merger enforcement policy
 .. image:: https://img.shields.io/pypi/status/mergeron
    :alt: PyPI - Package status
    :target: https://pypi.python.org/pypi/mergeron/
-.. image:: https://github.com/capeconomics/mergeron/actions/workflows/documentation.yml/badge.svg
-   :alt: documentation
-   :target: https://github.com/capeconomics/mergeron/actions/workflows/documentation.yml
 .. image:: https://github.com/capeconomics/mergeron/actions/workflows/packaging.yml/badge.svg
    :alt: CI
    :target: https://github.com/capeconomics/mergeron/actions/workflows/packaging.yml
