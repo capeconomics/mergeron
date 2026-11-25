@@ -173,11 +173,9 @@ def diversion_share_boundary_qdtr_wtd_avg(
                 mp.fmul(
                     2,
                     mp.quad(
-                        lambdify(
-                            s_1, _bdry_func.subs({d_star: _delta_star}), "mpmath"
-                        ).real,
+                        lambdify(s_1, _bdry_func.subs({d_star: _delta_star}), "mpmath"),
                         (0, _s_mid),
-                    ),
+                    ).real,
                 )
                 - _s_mid**2
             )
